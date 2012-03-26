@@ -24,7 +24,7 @@ def getlogger(name='epc'):
     logger.addHandler(ch)
     return logger
 
-logger = getlogger()
+_logger = getlogger()
 
 
 def encode_string(string):
@@ -37,11 +37,11 @@ def encode_object(obj, **kwds):
 
 class EPCHandler(SocketServer.StreamRequestHandler):
 
-    logger = logger
+    logger = _logger
 
     def _recv(self):
         while True:
-            logger.debug('receiving...')
+            self.logger.debug('receiving...')
             head = self.rfile.read(6)
             if not head:
                 return
@@ -51,7 +51,7 @@ class EPCHandler(SocketServer.StreamRequestHandler):
                 raise ValueError('need {0}-length data; got {1}'
                                  .format(length, len(data)))
             yield data
-            logger.debug(
+            self.logger.debug(
                 'received: length = %r; data = %r', length, data)
 
     @autolog('debug')
@@ -90,16 +90,18 @@ class EPCHandler(SocketServer.StreamRequestHandler):
     def _handle_methods(self, uid, meth, args):
         pass
 
+    # @autolog('debug')
     # def setup(self):
-    #     logger.debug('setup')
     #     SocketServer.StreamRequestHandler.setup(self)
 
+    # @autolog('debug')
     # def finish(self):
-    #     logger.debug('finish')
     #     SocketServer.StreamRequestHandler.finish(self)
 
 
 class EPCDispacher:
+
+    logger = _logger
 
     def __init__(self):
         self.funcs = {}
@@ -117,7 +119,7 @@ class EPCDispacher:
 
 class EPCServer(SocketServer.TCPServer, EPCDispacher):
 
-    logger = logger
+    logger = _logger
 
     def __init__(self, server_address,
                  RequestHandlerClass=EPCHandler,
@@ -125,19 +127,19 @@ class EPCServer(SocketServer.TCPServer, EPCDispacher):
         SocketServer.TCPServer.__init__(
             self, server_address, RequestHandlerClass, bind_and_activate)
         EPCDispacher.__init__(self)
-        logger.debug('-' * 75)
-        logger.debug(
+        self.logger.debug('-' * 75)
+        self.logger.debug(
             "EPCServer is initialized: server_address = %r",
             server_address)
 
     @autolog('debug')
     def handle_error(self, request, client_address):
-        logger.error('handle_error: trying to get traceback.format_exc')
+        self.logger.error('handle_error: trying to get traceback.format_exc')
         try:
             import traceback
-            logger.error('handle_error: \n%s', traceback.format_exc())
+            self.logger.error('handle_error: \n%s', traceback.format_exc())
         except:
-            logger.error('handle_error: OOPS')
+            self.logger.error('handle_error: OOPS')
 
 # see also: SimpleXMLRPCServer.SimpleXMLRPCDispatcher
 
@@ -157,4 +159,4 @@ if __name__ == '__main__':
     print port  # needed for Emacs client
 
     server.serve_forever()
-    logger.info('exit')
+    server.logger.info('exit')
