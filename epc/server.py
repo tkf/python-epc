@@ -1,6 +1,7 @@
 import SocketServer
 
 from sexpdata import loads, dumps, Symbol, String
+from epc.utils import autolog
 
 
 def getlogger(name='epc'):
@@ -36,9 +37,11 @@ def encode_object(obj, **kwds):
 
 class EPCHandler(SocketServer.StreamRequestHandler):
 
+    logger = logger
+
     def _recv(self):
-        logger.debug('receiving...')
         while True:
+            logger.debug('receiving...')
             head = self.rfile.read(6)
             if not head:
                 return
@@ -51,32 +54,27 @@ class EPCHandler(SocketServer.StreamRequestHandler):
             logger.debug(
                 'received: length = %r; data = %r', length, data)
 
+    @autolog('debug')
     def _send(self, string):
-        logger.debug('sending: %r', string)
         self.wfile.write(string)
-        logger.debug('sent: %r', string)
 
+    @autolog('debug')
     def handle(self):
         for sexp in self._recv():
             data = loads(sexp)
             obj = self._handle(data[0].value(), *data[1:])
             self._send(encode_object(obj))
 
+    @autolog('debug')
     def _handle(self, name, uid, *args):
-        logger.debug(
-            'handle: name = %r; uid = %r; args = %r', name, uid, args)
         try:
             ret = getattr(self, '_handle_{0}'.format(name))(uid, *args)
         except Exception as err:
-            ret = [
-                Symbol('return-error'), uid,
-                String('{0}({1!r})'.format(err.__class__.__name__, err))]
-        logger.debug('handle: ret = %r', ret)
+            ret = [Symbol('return-error'), uid, String(repr(err))]
         return ret
 
+    @autolog('debug')
     def _handle_call(self, uid, meth, *args):
-        logger.debug(
-            'handle-call: uid = %r, meth = %r, args = %r', uid, meth, args)
         func = self.server.funcs[meth.value()]
         return [Symbol('return'), uid, func(*args)]
 
@@ -119,6 +117,8 @@ class EPCDispacher:
 
 class EPCServer(SocketServer.TCPServer, EPCDispacher):
 
+    logger = logger
+
     def __init__(self, server_address,
                  RequestHandlerClass=EPCHandler,
                  bind_and_activate=True):
@@ -130,11 +130,8 @@ class EPCServer(SocketServer.TCPServer, EPCDispacher):
             "EPCServer is initialized: server_address = %r",
             server_address)
 
+    @autolog('debug')
     def handle_error(self, request, client_address):
-        logger.error('ERROR!')
-        logger.error(
-            'handle_error: request = %r; client_address = %r',
-            request, client_address)
         logger.error('handle_error: trying to get traceback.format_exc')
         try:
             import traceback
@@ -157,11 +154,7 @@ def echo_server(address='localhost', port=50000):
 if __name__ == '__main__':
     port = 50000
     server = echo_server(port=port)
-    print port
+    print port  # needed for Emacs client
 
     server.serve_forever()
-
-    # for i in range(10):
-    #     logger.debug('i = %r', i)
-    #     server.handle_request()
     logger.info('exit')
