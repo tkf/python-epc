@@ -87,8 +87,12 @@ class EPCHandler(SocketServer.StreamRequestHandler):
     def _handle_epc_error(self, uid, meth, args):
         pass
 
-    def _handle_methods(self, uid, meth, args):
-        pass
+    def _handle_methods(self, uid):
+        return [Symbol('return'), uid, [
+            (Symbol(name), [], String(func.__doc__ or ""))
+            # FIXNE: implement arg-specs
+            for (name, func)
+            in self.server.funcs.iteritems()]]
 
     # @autolog('debug')
     # def setup(self):
@@ -110,6 +114,7 @@ class EPCDispacher:
     def register_instance(self, instance, allow_dotted_names=False):
         self.instance = instance
         self.allow_dotted_names = allow_dotted_names
+        raise NotImplementedError
 
     def register_function(self, function, name=None):
         if name is None:
