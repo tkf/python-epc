@@ -50,9 +50,9 @@ class EPCHandler(SocketServer.StreamRequestHandler):
             if len(data) < length:
                 raise ValueError('need {0}-length data; got {1}'
                                  .format(length, len(data)))
-            yield data
             self.logger.debug(
                 'received: length = %r; data = %r', length, data)
+            yield data
 
     @autolog('debug')
     def _send(self, string):
