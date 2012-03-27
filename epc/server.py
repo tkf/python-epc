@@ -135,7 +135,7 @@ class EPCServer(SocketServer.TCPServer, EPCDispacher):
         self.logger.debug('-' * 75)
         self.logger.debug(
             "EPCServer is initialized: server_address = %r",
-            server_address)
+            self.server_address)
 
     @autolog('debug')
     def handle_error(self, request, client_address):
@@ -146,10 +146,13 @@ class EPCServer(SocketServer.TCPServer, EPCDispacher):
         except:
             self.logger.error('handle_error: OOPS')
 
+    def print_port(self):
+        print self.server_address[1]
+
 # see also: SimpleXMLRPCServer.SimpleXMLRPCDispatcher
 
 
-def echo_server(address='localhost', port=50000):
+def echo_server(address='localhost', port=0):
     server = EPCServer((address, port))
 
     def echo(*a):
@@ -159,9 +162,8 @@ def echo_server(address='localhost', port=50000):
 
 
 if __name__ == '__main__':
-    port = 50000
-    server = echo_server(port=port)
-    print port  # needed for Emacs client
+    server = echo_server()
+    server.print_port()  # needed for Emacs client
 
     server.serve_forever()
     server.logger.info('exit')
