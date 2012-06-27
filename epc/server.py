@@ -116,7 +116,7 @@ class EPCHandler(SocketServer.StreamRequestHandler):
     #     SocketServer.StreamRequestHandler.finish(self)
 
 
-class EPCDispacher:
+class EPCDispacher:        # SocketServer.TCPServer is old style class
 
     logger = _logger
 
@@ -135,7 +135,7 @@ class EPCDispacher:
         self.funcs[name] = function
 
 
-class EPCCaller:
+class EPCCaller:           # SocketServer.TCPServer is old style class
 
     logger = _logger
 
