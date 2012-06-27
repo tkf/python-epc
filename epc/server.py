@@ -135,6 +135,39 @@ class EPCDispacher:
         self.funcs[name] = function
 
 
+class EPCCaller:
+
+    logger = _logger
+
+    def __init__(self):
+        self.callbacks = {}
+
+        def uid():
+            i = 0
+            while True:
+                yield i
+                i += 1
+        self.uid = uid().next
+
+    def call(self, name, args, callback):
+        uid = self.uid()
+        self._send_object([Symbol('call'), uid, name] + args)
+        self.callbacks[uid] = callback
+
+    def methods(self, name, callback):
+        uid = self.uid()
+        self._send_object([Symbol('methods'), uid])
+        self.callbacks[uid] = callback
+
+    def _send_object(self, obj):
+        encode_object(obj)
+        # How to send this string??
+
+    # Probably this should go into "client" class?
+    # Are server methods allowed to call client's methods?
+    # If not, having this class and `return` handler makes no sense.
+
+
 class EPCServer(SocketServer.TCPServer, EPCDispacher):
 
     logger = _logger
