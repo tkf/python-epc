@@ -85,16 +85,19 @@ class EPCHandler(SocketServer.StreamRequestHandler):
 
     @autolog('debug')
     def _handle_call(self, uid, meth, *args):
-        func = self.server.funcs[meth.value()]
-        return [Symbol('return'), uid, func(*args)]
+        # See: `epc:handler-called-method`
+        name = meth.value()
+        if name in self.server.funcs:
+            func = self.server.funcs[name]
+            return [Symbol('return'), uid, func(*args)]
+        else:
+            return [Symbol('epc-error'), uid,
+                    "EPC-ERROR: No such method : {0}".format(name)]
 
     def _handle_return(self, uid, meth, args):
-        pass
-
-    def _handle_return_error(self, uid, meth, args):
-        pass
-
-    def _handle_epc_error(self, uid, meth, args):
+        # There should be a dict that maps uid to a callback.  This
+        # callback is set when calling the method of client from
+        # server (here).  This callback is called here with the args.
         pass
 
     def _handle_methods(self, uid):
