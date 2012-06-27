@@ -37,6 +37,16 @@ def encode_object(obj, **kwds):
 
 class EPCHandler(SocketServer.StreamRequestHandler):
 
+    # These attribute will are by `SocketServer.BaseRequestHandler`
+    # self.server  : an instance of `EPCServer`
+    # self.request :
+    # self.client_address
+
+    # These attribute will are by `SocketServer.StreamRequestHandler`
+    # self.connection : = self.server
+    # self.rfile      : stream from client
+    # self.wfile      : stream to client
+
     logger = _logger
 
     def _recv(self):
@@ -129,6 +139,10 @@ class EPCServer(SocketServer.TCPServer, EPCDispacher):
     def __init__(self, server_address,
                  RequestHandlerClass=EPCHandler,
                  bind_and_activate=True):
+        # `BaseServer` (super class of `SocketServer`) will set
+        # `RequestHandlerClass` to the attribute `self.RequestHandlerClass`.
+        # This class is initialize in `BaseServer.finish_request` by
+        # `self.RequestHandlerClass(request, client_address, self)`.
         SocketServer.TCPServer.__init__(
             self, server_address, RequestHandlerClass, bind_and_activate)
         EPCDispacher.__init__(self)
