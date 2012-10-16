@@ -1,3 +1,16 @@
+# [[[cog import cog; cog.outl('"""\n%s\n"""' % file('../README.rst').read())]]]
+"""
+EPC (RPC stack for Emacs Lisp) server for Python
+================================================
+
+
+Links:
+
+* `kiwanami/emacs-epc <https://github.com/kiwanami/emacs-epc>`_
+
+"""
+# [[[end]]]
+
 # Copyright (c) 2012 Takafumi Arakaki
 # All rights reserved.
 
