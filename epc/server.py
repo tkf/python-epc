@@ -206,6 +206,7 @@ def echo_server(address='localhost', port=0):
     server = EPCServer((address, port))
 
     def echo(*a):
+        """Return argument unchanged."""
         return a
     server.register_function(echo)
     return server
