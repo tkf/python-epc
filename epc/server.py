@@ -84,7 +84,7 @@ class EPCHandler(SocketServer.StreamRequestHandler):
         return ret
 
     @autolog('debug')
-    def _handle_call(self, uid, meth, *args):
+    def _handle_call(self, uid, meth, args):
         # See: `epc:handler-called-method`
         name = meth.value()
         if name in self.server.funcs:

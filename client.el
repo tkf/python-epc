@@ -9,7 +9,7 @@
  (epc:manager-server-process my-epc) nil)
 
 (deferred:$
-  (epc:call-deferred my-epc 'echo 10)
+  (epc:call-deferred my-epc 'echo '(10))
   (deferred:nextc it
     (lambda (x) (message "Return : %S" x))))
 
@@ -18,7 +18,7 @@
 
 (loop for i from 1 to 5
       do (deferred:$
-           (epc:call-deferred my-epc 'echo i)
+           (epc:call-deferred my-epc 'echo (list i))
            (deferred:nextc it
              (lambda (x) (message "Return : %S" x)))))
 
