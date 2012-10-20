@@ -37,13 +37,13 @@ def encode_object(obj, **kwds):
 
 class EPCHandler(SocketServer.StreamRequestHandler):
 
-    # These attribute will are by `SocketServer.BaseRequestHandler`
+    # These attribute are defined in `SocketServer.BaseRequestHandler`
     # self.server  : an instance of `EPCServer`
     # self.request :
     # self.client_address
 
-    # These attribute will are by `SocketServer.StreamRequestHandler`
-    # self.connection : = self.server
+    # These attribute are defined in `SocketServer.StreamRequestHandler`
+    # self.connection : = self.request
     # self.rfile      : stream from client
     # self.wfile      : stream to client
 
