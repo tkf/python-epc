@@ -1,30 +1,17 @@
+import logging
 import SocketServer
 
 from sexpdata import loads, dumps, Symbol, String
 from epc.utils import autolog
 
 
-def getlogger(name='epc'):
-    import logging
-    logger = logging.getLogger(name)
-    logger.setLevel(logging.DEBUG)
+_logger = logging.getLogger('epc.server')
 
-    # create console handler and set level to debug
-    ch = logging.FileHandler(filename='python-epc.log', mode='w')
+
+def setuplogfile(logger=_logger, filename='python-epc.log'):
+    ch = logging.FileHandler(filename=filename, mode='w')
     ch.setLevel(logging.DEBUG)
-
-    # # create formatter
-    # formatter = logging.Formatter(
-    #     '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
-    # # add formatter to ch
-    # ch.setFormatter(formatter)
-
-    # add ch to logger
     logger.addHandler(ch)
-    return logger
-
-_logger = getlogger()
 
 
 def encode_string(string):
@@ -204,6 +191,8 @@ class EPCServer(SocketServer.TCPServer, EPCDispacher):
 
 def echo_server(address='localhost', port=0):
     server = EPCServer((address, port))
+    server.logger.setLevel(logging.DEBUG)
+    setuplogfile()
 
     def echo(*a):
         """Return argument unchanged."""
