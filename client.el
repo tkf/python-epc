@@ -5,8 +5,6 @@
 (eval-when-compile (require 'cl))
 
 (defvar my-epc (epc:start-epc "python" '("-m" "epc.server")))
-(set-process-query-on-exit-flag
- (epc:manager-server-process my-epc) nil)
 
 (deferred:$
   (epc:call-deferred my-epc 'echo '(10))
@@ -24,5 +22,3 @@
 
 (message "Return : %S"
          (epc:sync my-epc (epc:query-methods-deferred my-epc)))
-
-(epc:stop-epc my-epc)
