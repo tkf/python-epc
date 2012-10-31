@@ -3,7 +3,7 @@ CARTON = carton
 EMACS = emacs
 
 run-sample:
-	EMACS=${EMACS} ${CARTON} exec ${EMACS} -batch -l client.el
+	EMACS=${EMACS} ${CARTON} exec ${EMACS} -Q -batch -l client.el
 
 install:
 	${CARTON} install
