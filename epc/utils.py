@@ -1,4 +1,5 @@
 import logging
+import itertools
 import functools
 
 
@@ -12,8 +13,9 @@ def func_call_as_str(name, *args, **kwds):
     """
     return '{0}({1})'.format(
         name,
-        ', '.join(map('{0!r}'.format, args) +
-                  map('{0[0]!s}={0[1]!r}'.format, sorted(kwds.iteritems()))))
+        ', '.join(itertools.chain(
+            map('{0!r}'.format, args),
+            map('{0[0]!s}={0[1]!r}'.format, sorted(kwds.items())))))
 
 
 def autolog(level):

@@ -1,8 +1,9 @@
 import sys
 import logging
-import SocketServer
 
 from sexpdata import loads, dumps, Symbol, String
+
+from .py3compat import SocketServer
 from epc.utils import autolog
 
 
@@ -16,7 +17,7 @@ def setuplogfile(logger=_logger, filename='python-epc.log'):
 
 
 def encode_string(string):
-    return "{0:06x}{1}\n".format(len(string) + 1, string)
+    return "{0:06x}{1}\n".format(len(string) + 1, string).encode()
 
 
 def encode_object(obj, **kwds):
@@ -96,7 +97,7 @@ class EPCHandler(SocketServer.StreamRequestHandler):
             (Symbol(name), [], String(func.__doc__ or ""))
             # FIXNE: implement arg-specs
             for (name, func)
-            in self.server.funcs.iteritems()]]
+            in self.server.funcs.items()]]
 
     # @autolog('debug')
     # def setup(self):

@@ -1,4 +1,3 @@
-import SocketServer
 import socket
 import threading
 import unittest
@@ -6,6 +5,7 @@ import unittest
 from sexpdata import Symbol, loads
 
 from ..server import EPCServer, encode_string, encode_object
+from ..py3compat import SocketServer
 
 
 class ThreadingEPCServer(SocketServer.ThreadingMixIn, EPCServer):
