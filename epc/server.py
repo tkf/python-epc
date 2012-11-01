@@ -178,7 +178,9 @@ class EPCServer(SocketServer.TCPServer, EPCDispacher):
         self.logger.debug(
             "EPCServer is initialized: server_address = %r",
             self.server_address)
+        self.set_debugger(debugger)
 
+    def set_debugger(self, debugger):
         if debugger == 'pdb':
             import pdb
             self.debugger = pdb
