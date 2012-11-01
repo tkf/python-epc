@@ -21,7 +21,7 @@ run-sample:
 	EMACS=${EMACS} PYTHON=${PYTHON} \
 		${CARTON} exec ${EMACS} -Q -batch -l client.el
 
-install:
+elpa:
 	${CARTON} install
 
 clean-elpa:
