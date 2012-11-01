@@ -4,7 +4,7 @@ import logging
 from sexpdata import loads, dumps, Symbol, String
 
 from .py3compat import SocketServer
-from epc.utils import autolog
+from .utils import autolog
 
 
 _logger = logging.getLogger('epc.server')
