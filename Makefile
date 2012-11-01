@@ -14,6 +14,8 @@ ifndef EMACS
 	EMACS = emacs
 endif
 
+.PHONY : test full-test run-sample elpa clean-elpa cog doc upload
+
 
 ## Tests
 
