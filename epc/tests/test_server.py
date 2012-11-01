@@ -41,7 +41,7 @@ class TestEPCServer(unittest.TestCase):
     def receive_message(self):
         result = self.client.recv(1024)
         self.assertEqual(int(result[:6], 16), len(result[6:]))
-        return loads(result[6:])  # skip the length part
+        return loads(result[6:].decode())  # skip the length part
 
     def test_echo(self):
         self.client.send(encode_string('(call 1 echo (55))'))
