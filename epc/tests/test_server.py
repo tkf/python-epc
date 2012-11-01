@@ -60,7 +60,7 @@ class TestEPCServer(unittest.TestCase):
         reply = self.receive_message()
         self.assertEqual(reply[0], Symbol('epc-error'))
         self.assertEqual(reply[1], 3)
-        self.assertIn('No such method', reply[2])
+        assert 'No such method' in reply[2]
 
     def test_methods(self):
         self.client.send(encode_string('(methods 4)'))
