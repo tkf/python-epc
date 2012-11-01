@@ -122,6 +122,15 @@ class EPCDispacher:        # SocketServer.TCPServer is old style class
         raise NotImplementedError
 
     def register_function(self, function, name=None):
+        """
+        Register function to be called from EPC client.
+
+        :type  function: callable
+        :arg   function: Function to publish.
+        :type      name: str
+        :arg       name: Name by which function is published.
+
+        """
         if name is None:
             name = function.__name__
         self.funcs[name] = function
@@ -162,6 +171,21 @@ class EPCCaller:           # SocketServer.TCPServer is old style class
 
 class EPCServer(SocketServer.TCPServer, EPCDispacher):
 
+    """
+    A server class to publish Python functions via EPC protocol.
+
+    >>> server = EPCServer(('localhost', 0))
+    >>> def echo(*a):
+    ...     return a
+    >>> server.register_function(echo)
+    >>> server.print_port()                                #doctest: +SKIP
+    >>> server.serve_forever()                             #doctest: +SKIP
+
+    See :class:`SocketServer.TCPServer` and :class:`SocketServer.BaseServer`
+    to see other methods that can be used.
+
+    """
+
     logger = _logger
 
     def __init__(self, server_address,
@@ -182,6 +206,16 @@ class EPCServer(SocketServer.TCPServer, EPCDispacher):
         self.set_debugger(debugger)
 
     def set_debugger(self, debugger):
+        """
+        Set debugger to run when an error occurs in published method.
+
+        You can also set debugger by passing `debugger` argument to
+        the class constructor.
+
+        :type debugger: {'pdb', 'ipdb', None}
+        :arg  debugger: type of debugger.
+
+        """
         if debugger == 'pdb':
             import pdb
             self.debugger = pdb
@@ -201,6 +235,17 @@ class EPCServer(SocketServer.TCPServer, EPCDispacher):
             self.logger.error('handle_error: OOPS')
 
     def print_port(self, stream=sys.stdout):
+        """
+        Print port this EPC server runs on.
+
+        As Emacs client reads port number from STDOUT, you need to
+        call this just before calling :meth:`serve_forever`.
+
+        :type stream: text stream
+        :arg  stream: A stream object to write port on.
+                      Default is :data:`sys.stdout`.
+
+        """
         stream.write(str(self.server_address[1]))
         stream.write("\n")
         stream.flush()
