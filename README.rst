@@ -52,7 +52,7 @@ repository.::
 If you have carton_ installed, you can run the above sample by
 simply typing the following commands::
 
-   make install     # install EPC in a separated environment
+   make elpa        # install EPC in a separated environment
    make run-sample  # run client.el
 
 .. _carton: https://github.com/rejeep/carton

@@ -1,4 +1,4 @@
-import SocketServer
+import io
 import socket
 import threading
 import unittest
@@ -6,6 +6,7 @@ import unittest
 from sexpdata import Symbol, loads
 
 from ..server import EPCServer, encode_string, encode_object
+from ..py3compat import SocketServer, PY3
 
 
 class ThreadingEPCServer(SocketServer.ThreadingMixIn, EPCServer):
@@ -41,7 +42,7 @@ class TestEPCServer(unittest.TestCase):
     def receive_message(self):
         result = self.client.recv(1024)
         self.assertEqual(int(result[:6], 16), len(result[6:]))
-        return loads(result[6:])  # skip the length part
+        return loads(result[6:].decode())  # skip the length part
 
     def test_echo(self):
         self.client.send(encode_string('(call 1 echo (55))'))
@@ -75,3 +76,12 @@ class TestEPCServer(unittest.TestCase):
         desired_docs = dict(
             (n, f.__doc__) for (n, f) in self.server.funcs.items())
         self.assertEqual(actual_docs, desired_docs)
+
+    def test_print_port(self):
+        if PY3:
+            stream = io.StringIO()
+        else:
+            stream = io.BytesIO()
+        self.server.print_port(stream)
+        self.assertEqual(stream.getvalue(),
+                         '{0}\n'.format(self.server.server_address[1]))

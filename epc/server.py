@@ -1,8 +1,9 @@
 import sys
 import logging
-import SocketServer
 
 from sexpdata import loads, dumps, Symbol, String
+
+from .py3compat import SocketServer
 from epc.utils import autolog
 
 
@@ -16,7 +17,7 @@ def setuplogfile(logger=_logger, filename='python-epc.log'):
 
 
 def encode_string(string):
-    return "{0:06x}{1}\n".format(len(string) + 1, string)
+    return "{0:06x}{1}\n".format(len(string) + 1, string).encode()
 
 
 def encode_object(obj, **kwds):
@@ -59,7 +60,7 @@ class EPCHandler(SocketServer.StreamRequestHandler):
     @autolog('debug')
     def handle(self):
         for sexp in self._recv():
-            data = loads(sexp)
+            data = loads(sexp.decode())
             obj = self._handle(data[0].value(), *data[1:])
             self._send(encode_object(obj))
 
@@ -96,7 +97,7 @@ class EPCHandler(SocketServer.StreamRequestHandler):
             (Symbol(name), [], String(func.__doc__ or ""))
             # FIXNE: implement arg-specs
             for (name, func)
-            in self.server.funcs.iteritems()]]
+            in self.server.funcs.items()]]
 
     # @autolog('debug')
     # def setup(self):
@@ -199,9 +200,10 @@ class EPCServer(SocketServer.TCPServer, EPCDispacher):
         except:
             self.logger.error('handle_error: OOPS')
 
-    def print_port(self):
-        print self.server_address[1]
-        sys.stdout.flush()
+    def print_port(self, stream=sys.stdout):
+        stream.write(str(self.server_address[1]))
+        stream.write("\n")
+        stream.flush()
 
 # see also: SimpleXMLRPCServer.SimpleXMLRPCDispatcher
 
