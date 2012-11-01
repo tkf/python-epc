@@ -4,7 +4,11 @@
   (load "byte-run"))
 (eval-when-compile (require 'cl))
 
+(message "Start EPC")
+
 (defvar my-epc (epc:start-epc "python" '("-m" "epc.server")))
+
+(message "Start request")
 
 (deferred:$
   (epc:call-deferred my-epc 'echo '(10))
