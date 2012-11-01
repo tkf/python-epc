@@ -6,7 +6,8 @@
 
 (message "Start EPC")
 
-(defvar my-epc (epc:start-epc "python" '("-m" "epc.server")))
+(defvar my-epc (epc:start-epc (or (getenv "PYTHON") "python")
+                              '("-m" "epc.server")))
 
 (message "Start request")
 
