@@ -15,7 +15,15 @@ ifndef EMACS
 endif
 
 
-## Functional test (run sample)
+## Tests
+
+test:
+	tox
+
+full-test: test elpa
+	make run-sample ENV=py26
+	make run-sample ENV=py27
+	make run-sample ENV=py32
 
 run-sample:
 	EMACS=${EMACS} PYTHON=${PYTHON} \
