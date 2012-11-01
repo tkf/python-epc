@@ -5,7 +5,7 @@ import epc
 setup(
     name='epc',
     version=epc.__version__,
-    packages=['epc'],
+    packages=['epc', 'epc.tests'],
     author=epc.__author__,
     author_email='aka.tkf@gmail.com',
     url='https://github.com/tkf/python-epc',
