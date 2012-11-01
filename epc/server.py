@@ -68,9 +68,9 @@ class EPCHandler(SocketServer.StreamRequestHandler):
         try:
             ret = getattr(self, '_handle_{0}'.format(name))(uid, *args)
         except Exception as err:
-            if self.debugger:
+            if self.server.debugger:
                 traceback = sys.exc_info()[2]
-                self.debugger.post_mortem(traceback)
+                self.server.debugger.post_mortem(traceback)
             ret = [Symbol('return-error'), uid, String(repr(err))]
         return ret
 
