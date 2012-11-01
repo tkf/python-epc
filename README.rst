@@ -67,9 +67,14 @@ Links
 * `Repository (at GitHub) <https://github.com/tkf/python-epc>`_
 * `Issue tracker (at GitHub) <https://github.com/tkf/python-epc/issues>`_
 * `PyPI <http://pypi.python.org/pypi/python-epc>`_
-
-.. Run test on Travis CI at some point (but not now).
-   * `Travis CI <https://travis-ci.org/#!/tkf/python-epc>`_
+* `Travis CI <https://travis-ci.org/#!/tkf/python-epc>`_ |build-status|
 
 * `kiwanami/emacs-epc <https://github.com/kiwanami/emacs-epc>`_
   (Client and server implementation in Emacs Lisp and Perl.)
+
+
+.. |build-status|
+   image:: https://secure.travis-ci.org/tkf/python-epc.png
+           ?branch=master
+   :target: http://travis-ci.org/tkf/python-epc
+   :alt: Build Status
