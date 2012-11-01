@@ -36,10 +36,15 @@ clean-elpa:
 	rm -rf elpa
 
 
-## Update files using cog.py
+## Document
+doc: cog
+	make -C doc html
 
+
+## Update files using cog.py
+cog: epc/__init__.py
 epc/__init__.py: README.rst
-	cog.py -r $@
+	cd epc && cog.py -r __init__.py
 
 
 ## Upload to PyPI
