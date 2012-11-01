@@ -15,7 +15,8 @@ Other resources:
 
 * `kiwanami/emacs-epc <https://github.com/kiwanami/emacs-epc>`_
   (Client and server implementation in Emacs Lisp and Perl.)
-
+* `tkf/emacs-jedi <https://github.com/tkf/emacs-jedi>`_
+  (Python completion for Emacs using EPC server.)
 
 .. |build-status|
    image:: https://secure.travis-ci.org/tkf/python-epc.png
