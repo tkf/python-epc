@@ -199,9 +199,10 @@ class EPCServer(SocketServer.TCPServer, EPCDispacher):
         except:
             self.logger.error('handle_error: OOPS')
 
-    def print_port(self):
-        print self.server_address[1]
-        sys.stdout.flush()
+    def print_port(self, stream=sys.stdout):
+        stream.write(str(self.server_address[1]))
+        stream.write("\n")
+        stream.flush()
 
 # see also: SimpleXMLRPCServer.SimpleXMLRPCDispatcher
 
