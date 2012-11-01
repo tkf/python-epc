@@ -68,6 +68,9 @@ class EPCHandler(SocketServer.StreamRequestHandler):
         try:
             ret = getattr(self, '_handle_{0}'.format(name))(uid, *args)
         except Exception as err:
+            if self.server.debugger:
+                traceback = sys.exc_info()[2]
+                self.server.debugger.post_mortem(traceback)
             ret = [Symbol('return-error'), uid, String(repr(err))]
         return ret
 
@@ -162,7 +165,8 @@ class EPCServer(SocketServer.TCPServer, EPCDispacher):
 
     def __init__(self, server_address,
                  RequestHandlerClass=EPCHandler,
-                 bind_and_activate=True):
+                 bind_and_activate=True,
+                 debugger=None):
         # `BaseServer` (super class of `SocketServer`) will set
         # `RequestHandlerClass` to the attribute `self.RequestHandlerClass`.
         # This class is initialize in `BaseServer.finish_request` by
@@ -174,6 +178,17 @@ class EPCServer(SocketServer.TCPServer, EPCDispacher):
         self.logger.debug(
             "EPCServer is initialized: server_address = %r",
             self.server_address)
+        self.set_debugger(debugger)
+
+    def set_debugger(self, debugger):
+        if debugger == 'pdb':
+            import pdb
+            self.debugger = pdb
+        elif debugger == 'ipdb':
+            import ipdb
+            self.debugger = ipdb
+        else:
+            self.debugger = debugger
 
     @autolog('debug')
     def handle_error(self, request, client_address):
