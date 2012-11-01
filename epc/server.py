@@ -1,3 +1,4 @@
+import sys
 import logging
 import SocketServer
 
@@ -185,6 +186,7 @@ class EPCServer(SocketServer.TCPServer, EPCDispacher):
 
     def print_port(self):
         print self.server_address[1]
+        sys.stdout.flush()
 
 # see also: SimpleXMLRPCServer.SimpleXMLRPCDispatcher
 
