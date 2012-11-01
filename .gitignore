@@ -1,4 +1,4 @@
 .tox
-doc
+doc/build
 elpa
 MANIFEST
