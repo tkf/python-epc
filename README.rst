@@ -6,7 +6,7 @@ Links:
 * `Documentaions (at Read the Docs) <http://python-epc.readthedocs.org/>`_
 * `Repository (at GitHub) <https://github.com/tkf/python-epc>`_
 * `Issue tracker (at GitHub) <https://github.com/tkf/python-epc/issues>`_
-* `PyPI <http://pypi.python.org/pypi/python-epc>`_
+* `PyPI <http://pypi.python.org/pypi/epc>`_
 * `Travis CI <https://travis-ci.org/#!/tkf/python-epc>`_ |build-status|
 
 Other resources:
