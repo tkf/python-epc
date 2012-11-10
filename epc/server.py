@@ -3,7 +3,7 @@ import logging
 
 from sexpdata import loads, dumps, Symbol, String
 
-from .py3compat import SocketServer, utf8
+from .py3compat import SocketServer
 from .utils import autolog
 
 
