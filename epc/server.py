@@ -17,8 +17,11 @@ def setuplogfile(logger=_logger, filename='python-epc.log'):
 
 
 def encode_string(string):
-    msg = utf8("{0:06x}{1}\n").format(len(string) + 1, string)
-    return msg.encode('utf-8')
+    data = string.encode('utf-8')
+    datalen = '{0:06x}'.format(len(data) + 1).encode()
+    return _JOIN_BYTES([datalen, data, _NEWLINE_BYTE])
+_JOIN_BYTES = ''.encode().join
+_NEWLINE_BYTE = '\n'.encode()
 
 
 def encode_object(obj, **kwds):
