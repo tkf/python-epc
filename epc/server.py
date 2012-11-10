@@ -3,7 +3,7 @@ import logging
 
 from sexpdata import loads, dumps, Symbol, String
 
-from .py3compat import SocketServer
+from .py3compat import SocketServer, utf8
 from .utils import autolog
 
 
@@ -17,7 +17,8 @@ def setuplogfile(logger=_logger, filename='python-epc.log'):
 
 
 def encode_string(string):
-    return "{0:06x}{1}\n".format(len(string) + 1, string).encode()
+    msg = utf8("{0:06x}{1}\n").format(len(string) + 1, string)
+    return msg.encode('utf-8')
 
 
 def encode_object(obj, **kwds):
