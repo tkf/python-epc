@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import io
 import socket
 import threading
@@ -6,7 +8,7 @@ import unittest
 from sexpdata import Symbol, loads
 
 from ..server import EPCServer, encode_string, encode_object
-from ..py3compat import SocketServer, PY3
+from ..py3compat import PY3, SocketServer, utf8
 
 
 class ThreadingEPCServer(SocketServer.ThreadingMixIn, EPCServer):
@@ -85,3 +87,10 @@ class TestEPCServer(unittest.TestCase):
         self.server.print_port(stream)
         self.assertEqual(stream.getvalue(),
                          '{0}\n'.format(self.server.server_address[1]))
+
+    def test_unicode_message(self):
+        s = "日本語能力!!ソﾊﾝｶｸ"
+        encode = lambda x: encode_string(utf8(x))
+        self.client.send(encode('(call 1 echo ("{0}"))'.format(s)))
+        result = self.client.recv(1024)
+        self.assertEqual(encode('(return 1 ("{0}"))'.format(s)), result)

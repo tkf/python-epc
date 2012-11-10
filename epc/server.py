@@ -3,7 +3,7 @@ import logging
 
 from sexpdata import loads, dumps, Symbol, String
 
-from .py3compat import SocketServer
+from .py3compat import SocketServer, utf8
 from .utils import autolog
 
 
@@ -17,7 +17,11 @@ def setuplogfile(logger=_logger, filename='python-epc.log'):
 
 
 def encode_string(string):
-    return "{0:06x}{1}\n".format(len(string) + 1, string).encode()
+    data = string.encode('utf-8')
+    datalen = '{0:06x}'.format(len(data) + 1).encode()
+    return _JOIN_BYTES([datalen, data, _NEWLINE_BYTE])
+_JOIN_BYTES = ''.encode().join
+_NEWLINE_BYTE = '\n'.encode()
 
 
 def encode_object(obj, **kwds):
@@ -60,7 +64,7 @@ class EPCHandler(SocketServer.StreamRequestHandler):
     @autolog('debug')
     def handle(self):
         for sexp in self._recv():
-            data = loads(sexp.decode())
+            data = loads(sexp.decode('utf-8'))
             obj = self._handle(data[0].value(), *data[1:])
             self._send(encode_object(obj))
 
