@@ -94,3 +94,10 @@ class TestEPCServer(unittest.TestCase):
         self.client.send(encode('(call 1 echo ("{0}"))'.format(s)))
         result = self.client.recv(1024)
         self.assertEqual(encode('(return 1 ("{0}"))'.format(s)), result)
+
+    def test_invalid_sexp(self):
+        self.client.send(encode_string('(((invalid sexp!'))
+        reply = self.receive_message()
+        self.assertEqual(reply[0].value(), Symbol('epc-error').value())
+        self.assertEqual(reply[1], [])  # uid
+        assert 'Not enough closing brackets.' in reply[2]
