@@ -58,26 +58,28 @@ class EPCHandler(SocketServer.StreamRequestHandler):
             yield data
 
     @autolog('debug')
-    def _send(self, string):
+    def _send(self, obj):
+        string = encode_object(obj)
         self.wfile.write(string)
 
     @autolog('debug')
     def handle(self):
         for sexp in self._recv():
-            data = loads(sexp.decode('utf-8'))
-            obj = self._handle(data[0].value(), *data[1:])
-            self._send(encode_object(obj))
+            self._handle(sexp)
 
     @autolog('debug')
-    def _handle(self, name, uid, *args):
+    def _handle(self, sexp):
+        uid = undefined = []  # default: nil
         try:
-            ret = getattr(self, '_handle_{0}'.format(name))(uid, *args)
+            data = loads(sexp.decode('utf-8'))
+            (name, uid, args) = (data[0].value(), data[1], data[2:])
+            self._send(getattr(self, '_handle_{0}'.format(name))(uid, *args))
         except Exception as err:
             if self.server.debugger:
                 traceback = sys.exc_info()[2]
                 self.server.debugger.post_mortem(traceback)
-            ret = [Symbol('return-error'), uid, String(repr(err))]
-        return ret
+            name = 'epc-error' if uid is undefined else 'return-error'
+            self._send([Symbol(name), uid, String(repr(err))])
 
     @autolog('debug')
     def _handle_call(self, uid, meth, args):
