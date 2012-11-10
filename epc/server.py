@@ -61,7 +61,7 @@ class EPCHandler(SocketServer.StreamRequestHandler):
     @autolog('debug')
     def handle(self):
         for sexp in self._recv():
-            data = loads(sexp.decode())
+            data = loads(sexp.decode('utf-8'))
             obj = self._handle(data[0].value(), *data[1:])
             self._send(encode_object(obj))
 
