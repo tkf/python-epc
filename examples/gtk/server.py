@@ -57,6 +57,7 @@ class SampleGTKServer(object):
         pass
 
     def destroy(self, widget, data=None):
+        self.server.shutdown()
         gtk.main_quit()
 
     def main(self):

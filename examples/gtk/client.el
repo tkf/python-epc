@@ -20,7 +20,11 @@
 (defun pyepc-sample-gtk-destroy ()
   "Close GTK window"
   (interactive)
-  (epc:call-deferred pyepc-sample-gtk-epc 'destroy nil))
+  (deferred:nextc
+    (epc:call-deferred pyepc-sample-gtk-epc 'destroy nil)
+    (lambda ()
+      (epc:stop-epc pyepc-sample-gtk-epc)
+      (message "EPC server is stopped."))))
 
 (defun pyepc-sample-gtk-set-button-label (label)
   "Change GUI button label."
