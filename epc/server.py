@@ -156,16 +156,40 @@ class EPCHandler(SocketServer.StreamRequestHandler):
 
         Return True from this function means that error is properly
         handled, so the error is not sent to client.  Do not confuse
-        this with `SocketServer.BaseServer.handle_error`.  Default
-        implementation does nothing.  Therefore, error occurs in
-        this server is sent to client always.
+        this with :meth:`SocketServer.BaseServer.handle_error`.  This
+        method is for handling error for each client, not for entire
+        server.  Default implementation does nothing.  Therefore,
+        error occurs in this server is sent to client always.
 
         """
 
     def call(self, name, *args, **kwds):
+        """
+        Call method connected to this handler.
+
+        :type     name: str
+        :arg      name: Method name to call.
+        :type     args: list
+        :arg      args: Arguments for remote method to call.
+        :type callback: callable
+        :arg  callback: A function to be called with returned value of
+                        the remove method.
+        :type  errback: callable
+        :arg   errback: A function to be called with an error occurred
+                        in the remote method.  It is either an instance
+                        of :class:`ReturnError` or :class:`EPCError`.
+
+        """
         self.server.call(self, name, *args, **kwds)
 
     def methods(self, *args, **kwds):
+        """
+        Request info of callable remote methods.
+
+        Arguments for :meth:`call` except for `name` can be applied to
+        this function too.
+
+        """
         self.server.methods(self, *args, **kwds)
 
 
@@ -186,7 +210,7 @@ class EPCClientManager:
         """
         Handler which is called with a newly connected `client`.
 
-        :type  handler: EPCHandler
+        :type  handler: :class:`EPCHandler`
         :arg   handler: Object for handling request from the client.
 
         Default implementation does nothing.
@@ -197,7 +221,7 @@ class EPCClientManager:
         """
         Handler which is called with a disconnected `client`.
 
-        :type  handler: EPCHandler
+        :type  handler: :class:`EPCHandler`
         :arg   handler: Object for handling request from the client.
 
         Default implementation does nothing.
