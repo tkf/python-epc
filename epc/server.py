@@ -214,18 +214,25 @@ class EPCCaller:           # SocketServer.TCPServer is old style class
 
     def __init__(self):
         self.callbacks = {}
+        self.errbacks = {}
         counter = itertools.count(1)
         self.get_uid = lambda: next(counter)
 
-    def call(self, handler, name, args, callback):
+    def _set_callbacks(self, uid, callback, errback):
+        if callback is not None:
+            self.callbacks[uid] = callback
+        if errback is not None:
+            self.errbacks[uid] = errback
+
+    def call(self, handler, name, args=[], callback=None, errback=None):
         uid = self.get_uid()
         handler._send([Symbol('call'), uid, Symbol(name), args])
-        self.callbacks[uid] = callback
+        self._set_callbacks(uid, callback, errback)
 
-    def methods(self, handler, callback):
+    def methods(self, handler, callback=None, errback=None):
         uid = self.get_uid()
         handler._send([Symbol('methods'), uid])
-        self.callbacks[uid] = callback
+        self._set_callbacks(uid, callback, errback)
 
     def execute_reply(self, uid, reply):
         callback = self.callbacks.pop(uid)
