@@ -7,7 +7,8 @@ import unittest
 
 from sexpdata import Symbol, loads
 
-from ..server import ThreadingEPCServer, encode_string, encode_object
+from ..server import ThreadingEPCServer, encode_string, encode_object, \
+    ReturnError, EPCError
 from ..py3compat import PY3, utf8, Queue
 
 
@@ -120,12 +121,19 @@ class TestEPCServerCallClient(BaseEPCServerTestCase):
         self.callback_called_with = Queue.Queue()
         self.callback = self.callback_called_with.put
 
-    def test_call_client_dummy_method(self):
-        self.handler.call('dummy', [55], self.callback)
+        self.errback_called_with = Queue.Queue()
+        self.errback = self.errback_called_with.put
+
+    def check_call_client_dummy_method(self):
+        self.handler.call('dummy', [55], self.callback, self.errback)
         (call, uid, meth, args) = self.receive_message()
         assert isinstance(uid, int)
         self.assertEqual([call, uid, meth, args],
                          [Symbol('call'), uid, Symbol('dummy'), [55]])
+        return uid
+
+    def test_call_client_dummy_method(self):
+        uid = self.check_call_client_dummy_method()
         self.client.send(encode_string('(return {0} 123)'.format(uid)))
         reply = self.callback_called_with.get(True, 1)
         self.assertEqual(reply, 123)
@@ -138,3 +146,17 @@ class TestEPCServerCallClient(BaseEPCServerTestCase):
             '(return {0} ((dummy () "")))'.format(uid)))
         reply = self.callback_called_with.get(True, 1)
         self.assertEqual(reply, [[Symbol('dummy'), [], ""]])
+
+    def check_call_client_error(self, ename, eclass, message=utf8("message")):
+        uid = self.check_call_client_dummy_method()
+        self.client.send(
+            encode_string('({0} {1} "{2}")'.format(ename, uid, message)))
+        reply = self.errback_called_with.get(True, 1)
+        assert isinstance(reply, eclass)
+        self.assertEqual(reply.args, (message,))
+
+    def test_call_client_return_error(self):
+        self.check_call_client_error('return-error', ReturnError)
+
+    def test_call_client_epc_error(self):
+        self.check_call_client_error('epc-error', EPCError)
