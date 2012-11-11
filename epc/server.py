@@ -1,5 +1,6 @@
 import sys
 import logging
+import itertools
 
 from sexpdata import loads, dumps, Symbol, String
 
@@ -41,6 +42,18 @@ class EPCHandler(SocketServer.StreamRequestHandler):
     # self.wfile      : stream to client
 
     logger = _logger
+
+    @autolog('debug')
+    def setup(self):
+        SocketServer.StreamRequestHandler.setup(self)
+        self.server.add_client(self)
+
+    @autolog('debug')
+    def finish(self):
+        try:
+            SocketServer.StreamRequestHandler.setup(self)
+        finally:
+            self.server.remove_client(self)
 
     def _recv(self):
         while True:
@@ -92,12 +105,6 @@ class EPCHandler(SocketServer.StreamRequestHandler):
             return [Symbol('epc-error'), uid,
                     "EPC-ERROR: No such method : {0}".format(name)]
 
-    def _handle_return(self, uid, meth, args):
-        # There should be a dict that maps uid to a callback.  This
-        # callback is set when calling the method of client from
-        # server (here).  This callback is called here with the args.
-        pass
-
     def _handle_methods(self, uid):
         return [Symbol('return'), uid, [
             (Symbol(name), [], String(func.__doc__ or ""))
@@ -105,13 +112,50 @@ class EPCHandler(SocketServer.StreamRequestHandler):
             for (name, func)
             in self.server.funcs.items()]]
 
-    # @autolog('debug')
-    # def setup(self):
-    #     SocketServer.StreamRequestHandler.setup(self)
+    def _handle_return(self, uid, reply):
+        self.server.execute_reply(uid, reply)
 
-    # @autolog('debug')
-    # def finish(self):
-    #     SocketServer.StreamRequestHandler.finish(self)
+    def call(self, name, args, callback):
+        self.server.call(self, name, args, callback)
+
+    def methods(self, callback):
+        self.server.methods(self, callback)
+
+
+class EPCClientManager:
+
+    def __init__(self):
+        self.clients = set()
+
+    def add_client(self, handler):
+        self.clients.add(handler)
+        self.after_add_client(handler)
+
+    def remove_client(self, handler):
+        self.clients.remove(handler)
+        self.after_remove_client(handler)
+
+    def after_add_client(self, handler):
+        """
+        Handler which is called with a newly connected `client`.
+
+        :type  handler: EPCHandler
+        :arg   handler: Object for handling request from the client.
+
+        Default implementation does nothing.
+
+        """
+
+    def after_remove_client(self, handler):
+        """
+        Handler which is called with a disconnected `client`.
+
+        :type  handler: EPCHandler
+        :arg   handler: Object for handling request from the client.
+
+        Default implementation does nothing.
+
+        """
 
 
 class EPCDispacher:        # SocketServer.TCPServer is old style class
@@ -144,38 +188,28 @@ class EPCDispacher:        # SocketServer.TCPServer is old style class
 
 class EPCCaller:           # SocketServer.TCPServer is old style class
 
-    logger = _logger
-
     def __init__(self):
         self.callbacks = {}
+        counter = itertools.count(1)
+        self.get_uid = lambda: next(counter)
 
-        def uid():
-            i = 0
-            while True:
-                yield i
-                i += 1
-        self.uid = uid().next
-
-    def call(self, name, args, callback):
-        uid = self.uid()
-        self._send_object([Symbol('call'), uid, name] + args)
+    def call(self, handler, name, args, callback):
+        uid = self.get_uid()
+        handler._send([Symbol('call'), uid, Symbol(name), args])
         self.callbacks[uid] = callback
 
-    def methods(self, name, callback):
-        uid = self.uid()
-        self._send_object([Symbol('methods'), uid])
+    def methods(self, handler, callback):
+        uid = self.get_uid()
+        handler._send([Symbol('methods'), uid])
         self.callbacks[uid] = callback
 
-    def _send_object(self, obj):
-        encode_object(obj)
-        # How to send this string??
-
-    # Probably this should go into "client" class?
-    # Are server methods allowed to call client's methods?
-    # If not, having this class and `return` handler makes no sense.
+    def execute_reply(self, uid, reply):
+        callback = self.callbacks.pop(uid)
+        callback(reply)
 
 
-class EPCServer(SocketServer.TCPServer, EPCDispacher):
+class EPCServer(SocketServer.TCPServer, EPCClientManager,
+                EPCDispacher, EPCCaller):
 
     """
     A server class to publish Python functions via EPC protocol.
@@ -204,7 +238,9 @@ class EPCServer(SocketServer.TCPServer, EPCDispacher):
         # `self.RequestHandlerClass(request, client_address, self)`.
         SocketServer.TCPServer.__init__(
             self, server_address, RequestHandlerClass, bind_and_activate)
+        EPCClientManager.__init__(self)
         EPCDispacher.__init__(self)
+        EPCCaller.__init__(self)
         self.logger.debug('-' * 75)
         self.logger.debug(
             "EPCServer is initialized: server_address = %r",
