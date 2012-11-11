@@ -73,11 +73,8 @@ class SampleGTKServer(object):
         self.server.register_function(destroy)
         self.server.register_function(set_button_label)
 
-    def get_client_handler(self):
-        return next(iter(self.server.clients))
-
     def clicked(self, widget, data=None):
-        handler = self.get_client_handler()
+        handler = self.server.clients[0]
         handler.call('message', ["clicked!"], lambda _: None)
 
     def destroy(self, widget, data=None):
