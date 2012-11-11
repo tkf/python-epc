@@ -139,11 +139,11 @@ class EPCHandler(SocketServer.StreamRequestHandler):
     def _handle_return(self, uid, reply):
         self.server.handle_return(uid, reply)
 
-    def call(self, name, args, callback):
-        self.server.call(self, name, args, callback)
+    def call(self, name, *args, **kwds):
+        self.server.call(self, name, *args, **kwds)
 
-    def methods(self, callback):
-        self.server.methods(self, callback)
+    def methods(self, *args, **kwds):
+        self.server.methods(self, *args, **kwds)
 
 
 class EPCClientManager:
