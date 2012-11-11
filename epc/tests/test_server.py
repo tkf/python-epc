@@ -117,7 +117,7 @@ class TestEPCServerCallClient(BaseEPCServerTestCase):
     def setUp(self):
         super(TestEPCServerCallClient, self).setUp()
         self.check_echo()  # to start connection, client must send something
-        self.handler = next(iter(self.server.clients))
+        self.handler = self.server.clients[0]
 
         self.callback_called_with = Queue.Queue()
         self.callback = self.callback_called_with.put
