@@ -105,18 +105,21 @@ class EPCHandler(SocketServer.StreamRequestHandler):
             return [Symbol('epc-error'), uid,
                     "EPC-ERROR: No such method : {0}".format(name)]
 
-    def _handle_return(self, uid, meth, args):
-        # There should be a dict that maps uid to a callback.  This
-        # callback is set when calling the method of client from
-        # server (here).  This callback is called here with the args.
-        pass
-
     def _handle_methods(self, uid):
         return [Symbol('return'), uid, [
             (Symbol(name), [], String(func.__doc__ or ""))
             # FIXNE: implement arg-specs
             for (name, func)
             in self.server.funcs.items()]]
+
+    def _handle_return(self, uid, reply):
+        self.server.execute_reply(uid, reply)
+
+    def call(self, name, args, callback):
+        self.server.call(self, name, args, callback)
+
+    def methods(self, callback):
+        self.server.methods(self, callback)
 
 
 class EPCClientManager:
@@ -201,13 +204,13 @@ class EPCCaller:           # SocketServer.TCPServer is old style class
         handler._send([Symbol('methods'), uid])
         self.callbacks[uid] = callback
 
-    def execute_reply(self, uid, args):
+    def execute_reply(self, uid, reply):
         callback = self.callbacks.pop(uid)
-        callback(*args)
+        callback(reply)
 
 
-
-class EPCServer(SocketServer.TCPServer, EPCClientManager, EPCDispacher):
+class EPCServer(SocketServer.TCPServer, EPCClientManager,
+                EPCDispacher, EPCCaller):
 
     """
     A server class to publish Python functions via EPC protocol.
@@ -238,6 +241,7 @@ class EPCServer(SocketServer.TCPServer, EPCClientManager, EPCDispacher):
             self, server_address, RequestHandlerClass, bind_and_activate)
         EPCClientManager.__init__(self)
         EPCDispacher.__init__(self)
+        EPCCaller.__init__(self)
         self.logger.debug('-' * 75)
         self.logger.debug(
             "EPCServer is initialized: server_address = %r",
