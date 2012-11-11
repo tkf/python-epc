@@ -7,12 +7,8 @@ import unittest
 
 from sexpdata import Symbol, loads
 
-from ..server import EPCServer, encode_string, encode_object
-from ..py3compat import PY3, SocketServer, utf8
-
-
-class ThreadingEPCServer(SocketServer.ThreadingMixIn, EPCServer):
-    allow_reuse_address = True
+from ..server import ThreadingEPCServer, encode_string, encode_object
+from ..py3compat import PY3, utf8
 
 
 class TestEPCServer(unittest.TestCase):
@@ -21,6 +17,7 @@ class TestEPCServer(unittest.TestCase):
         # See: http://stackoverflow.com/questions/7720953
         self.server = ThreadingEPCServer(('localhost', 0))
         self.server_thread = threading.Thread(target=self.server.serve_forever)
+        self.server_thread.allow_reuse_address = True
         self.client = socket.create_connection(self.server.server_address)
         self.server_thread.start()
 
