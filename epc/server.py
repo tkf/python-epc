@@ -192,7 +192,8 @@ class EPCCaller:           # SocketServer.TCPServer is old style class
 
     def __init__(self):
         self.callbacks = {}
-        self.get_uid = itertools.count(1).next
+        counter = itertools.count(1)
+        self.get_uid = lambda: next(counter)
 
     def call(self, handler, name, args, callback):
         uid = self.get_uid()
