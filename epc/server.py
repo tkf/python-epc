@@ -197,23 +197,20 @@ class EPCCaller:           # SocketServer.TCPServer is old style class
         self.callbacks = {}
         self.get_uid = itertools.count(1).next
 
-    def call(self, name, args, callback):
+    def call(self, handler, name, args, callback):
         uid = self.get_uid()
-        self._send_object([Symbol('call'), uid, name] + args)
+        handler._send([Symbol('call'), uid, name] + args)
         self.callbacks[uid] = callback
 
-    def methods(self, name, callback):
+    def methods(self, handler, callback):
         uid = self.get_uid()
-        self._send_object([Symbol('methods'), uid])
+        handler._send([Symbol('methods'), uid])
         self.callbacks[uid] = callback
 
-    def _send_object(self, obj):
-        encode_object(obj)
-        # How to send this string??
+    def execute_reply(self, uid, args):
+        callback = self.callbacks.pop(uid)
+        callback(*args)
 
-    # Probably this should go into "client" class?
-    # Are server methods allowed to call client's methods?
-    # If not, having this class and `return` handler makes no sense.
 
 
 class EPCServer(SocketServer.TCPServer, EPCClientManager, EPCDispacher):
