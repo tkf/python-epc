@@ -31,7 +31,7 @@ full-test: test elpa
 	make run-sample ENV=py32
 
 run-sample:
-	${sample_runner} client.el
+	${sample_runner} examples/echo/client.el
 
 elpa:
 	${CARTON} install
