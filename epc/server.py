@@ -176,13 +176,13 @@ class EPCClientManager:
 
     def add_client(self, handler):
         self.clients.add(handler)
-        self.after_add_client(handler)
+        self.handle_client_connect(handler)
 
     def remove_client(self, handler):
         self.clients.remove(handler)
-        self.after_remove_client(handler)
+        self.handle_client_disconnect(handler)
 
-    def after_add_client(self, handler):
+    def handle_client_connect(self, handler):
         """
         Handler which is called with a newly connected `client`.
 
@@ -193,7 +193,7 @@ class EPCClientManager:
 
         """
 
-    def after_remove_client(self, handler):
+    def handle_client_disconnect(self, handler):
         """
         Handler which is called with a disconnected `client`.
 
