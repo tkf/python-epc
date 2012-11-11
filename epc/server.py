@@ -30,27 +30,39 @@ def encode_object(obj, **kwds):
 
 
 class BaseEPCError(Exception):
-    pass
+    """
+    All exceptions from remote method are derived from this class.
+    """
 
 
-class IDNoFound(BaseEPCError):
-    pass
+class CallerUnknown(BaseEPCError):
+    """
+    Error raised in remote method, but caller of the method is unknown.
+    """
 
 
 class EPCError(BaseEPCError):
-    pass
+    """
+    Error returned by `epc-error` protocol.
+    """
 
 
 class ReturnError(BaseEPCError):
-    pass
+    """
+    Error returned by `return-error` protocol.
+    """
 
 
-class EPCErrorNoID(IDNoFound, EPCError):
-    pass
+class EPCErrorCallerUnknown(CallerUnknown, EPCError):
+    """
+    Same as :class:`EPCError`, but caller is unknown.
+    """
 
 
-class ReturnErrorNoID(IDNoFound, ReturnError):
-    pass
+class ReturnErrorCallerUnknown(CallerUnknown, ReturnError):
+    """
+    Same as :class:`ReturnError`, but caller is unknown.
+    """
 
 
 class EPCHandler(SocketServer.StreamRequestHandler):
@@ -156,16 +168,40 @@ class EPCHandler(SocketServer.StreamRequestHandler):
 
         Return True from this function means that error is properly
         handled, so the error is not sent to client.  Do not confuse
-        this with `SocketServer.BaseServer.handle_error`.  Default
-        implementation does nothing.  Therefore, error occurs in
-        this server is sent to client always.
+        this with :meth:`SocketServer.BaseServer.handle_error`.  This
+        method is for handling error for each client, not for entire
+        server.  Default implementation does nothing.  Therefore,
+        error occurs in this server is sent to client always.
 
         """
 
     def call(self, name, *args, **kwds):
+        """
+        Call method connected to this handler.
+
+        :type     name: str
+        :arg      name: Method name to call.
+        :type     args: list
+        :arg      args: Arguments for remote method to call.
+        :type callback: callable
+        :arg  callback: A function to be called with returned value of
+                        the remove method.
+        :type  errback: callable
+        :arg   errback: A function to be called with an error occurred
+                        in the remote method.  It is either an instance
+                        of :class:`ReturnError` or :class:`EPCError`.
+
+        """
         self.server.call(self, name, *args, **kwds)
 
     def methods(self, *args, **kwds):
+        """
+        Request info of callable remote methods.
+
+        Arguments for :meth:`call` except for `name` can be applied to
+        this function too.
+
+        """
         self.server.methods(self, *args, **kwds)
 
 
@@ -173,6 +209,9 @@ class EPCClientManager:
 
     def __init__(self):
         self.clients = []
+        """
+        A list of :class:`EPCHandler` object for connected clients.
+        """
 
     def add_client(self, handler):
         self.clients.append(handler)
@@ -186,7 +225,7 @@ class EPCClientManager:
         """
         Handler which is called with a newly connected `client`.
 
-        :type  handler: EPCHandler
+        :type  handler: :class:`EPCHandler`
         :arg   handler: Object for handling request from the client.
 
         Default implementation does nothing.
@@ -197,7 +236,7 @@ class EPCClientManager:
         """
         Handler which is called with a disconnected `client`.
 
-        :type  handler: EPCHandler
+        :type  handler: :class:`EPCHandler`
         :arg   handler: Object for handling request from the client.
 
         Default implementation does nothing.
@@ -274,17 +313,24 @@ class EPCCaller:           # SocketServer.TCPServer is old style class
             errback(error)
 
     def handle_return_error(self, uid, reply):
-        self._handle_error_reply(uid, reply, ReturnError, ReturnErrorNoID)
+        self._handle_error_reply(uid, reply, ReturnError,
+                                 ReturnErrorCallerUnknown)
 
     def handle_epc_error(self, uid, reply):
-        self._handle_error_reply(uid, reply, EPCError, EPCErrorNoID)
+        self._handle_error_reply(uid, reply, EPCError,
+                                 EPCErrorCallerUnknown)
 
 
 class EPCServer(SocketServer.TCPServer, EPCClientManager,
                 EPCDispacher, EPCCaller):
 
     """
-    A server class to publish Python functions via EPC protocol.
+    A server class to publish functions and call functions via EPC protocol.
+
+    To publish Python functions, all you need is
+    :meth:`register_function() <EPCDispacher.register_function>`,
+    :meth:`print_port` and
+    :meth:`serve_forever() <SocketServer.BaseServer.serve_forever>`.
 
     >>> server = EPCServer(('localhost', 0))
     >>> def echo(*a):
@@ -293,8 +339,18 @@ class EPCServer(SocketServer.TCPServer, EPCClientManager,
     >>> server.print_port()                                #doctest: +SKIP
     >>> server.serve_forever()                             #doctest: +SKIP
 
+    To call client's method, use :attr:`clients <EPCClientManager.clients>`,
+    to get client handler and use its :meth:`EPCHandler.call` and
+    :meth:`EPCHandler.methods` methods to communicate with connected client.
+
+    >>> handler = server.clients[0]                        #doctest: +SKIP
+    >>> def callback(reply):
+    ...     print(reply)
+    >>> handler.call('method_name', ['arg-1', 'arg-2', 'arg-3'],
+    ...              callback)                             #doctest: +SKIP
+
     See :class:`SocketServer.TCPServer` and :class:`SocketServer.BaseServer`
-    to see other methods that can be used.
+    for other usable methods.
 
     """
 
@@ -368,7 +424,17 @@ class EPCServer(SocketServer.TCPServer, EPCClientManager,
 
 
 class ThreadingEPCServer(SocketServer.ThreadingMixIn, EPCServer):
-    pass
+    """
+    Class :class:`EPCServer` mixed with :class:`SocketServer.ThreadingMixIn`.
+
+    Use this class when combining EPCServer with other Python module
+    which has event loop, such as GUI modules.  For example, see
+    `examples/gtk/server.py`_ for how to use this class with GTK
+
+    .. _examples/gtk/server.py:
+       https://github.com/tkf/python-epc/blob/master/examples/gtk/server.py
+
+    """
 
 
 def echo_server(address='localhost', port=0):

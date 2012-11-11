@@ -23,10 +23,20 @@ Other resources:
    :alt: Build Status
 
 
+What is this?
+-------------
+
+EPC is an RPC stack for Emacs Lisp and Python-EPC is its server side
+implementation in Python.  Using Python-EPC, you can easily call
+Emacs Lisp function from Python and Python function from Emacs.  For
+example, you can use Python GUI module to build widgets for Emacs
+(see `examples/gtk/server.py`_ for example).
+
+
 Install
 -------
 
-To install python-epc and its dependency sexpdata_, run the following
+To install Python-EPC and its dependency sexpdata_, run the following
 command.::
 
    pip install epc
@@ -57,7 +67,7 @@ Save the following code as ``my-server.py``.
 
 And then run the following code from Emacs.
 This is a stripped version of `examples/echo/client.el`_ included in
-python-epc repository_.::
+Python-EPC repository_.::
 
    (require 'epc)
 
@@ -81,3 +91,13 @@ simply typing the following commands::
    make run-sample  # run examples/echo/client.el
 
 .. _carton: https://github.com/rejeep/carton
+
+
+For example of bidirectional communication and integration with GTK,
+see `examples/gtk/server.py`_.  You can run this example by::
+
+   make elpa
+   make run-gtk-sample  # run examples/gtk/client.el
+
+.. _examples/gtk/server.py:
+   https://github.com/tkf/python-epc/blob/master/examples/gtk/server.py
