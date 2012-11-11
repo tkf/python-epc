@@ -14,6 +14,9 @@ ifndef EMACS
 	EMACS = emacs
 endif
 
+sample_runner = EMACS=${EMACS} PYTHON=${PYTHON} ${CARTON} exec \
+	${EMACS} -Q -batch -l
+
 .PHONY : test full-test run-sample elpa clean-elpa cog doc upload
 
 
@@ -28,8 +31,7 @@ full-test: test elpa
 	make run-sample ENV=py32
 
 run-sample:
-	EMACS=${EMACS} PYTHON=${PYTHON} \
-		${CARTON} exec ${EMACS} -Q -batch -l client.el
+	${sample_runner} examples/echo/client.el
 
 elpa:
 	${CARTON} install

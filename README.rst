@@ -3,9 +3,9 @@ EPC (RPC stack for Emacs Lisp) server for Python
 
 Links:
 
-* `Documentaions (at Read the Docs) <http://python-epc.readthedocs.org/>`_
-* `Repository (at GitHub) <https://github.com/tkf/python-epc>`_
-* `Issue tracker (at GitHub) <https://github.com/tkf/python-epc/issues>`_
+* `Documentation <http://python-epc.readthedocs.org/>`_ (at Read the Docs)
+* `Repository <https://github.com/tkf/python-epc>`_ (at GitHub)
+* `Issue tracker <https://github.com/tkf/python-epc/issues>`_ (at GitHub)
 * `PyPI <http://pypi.python.org/pypi/epc>`_
 * `Travis CI <https://travis-ci.org/#!/tkf/python-epc>`_ |build-status|
 
@@ -56,8 +56,8 @@ Save the following code as ``my-server.py``.
 
 
 And then run the following code from Emacs.
-This is a stripped version of client.el included in python-epc
-repository.::
+This is a stripped version of `examples/echo/client.el`_ included in
+python-epc repository_.::
 
    (require 'epc)
 
@@ -71,10 +71,13 @@ repository.::
    (message "Return : %S" (epc:call-sync my-epc 'echo '(10 40)))
 
 
+.. _examples/echo/client.el:
+   https://github.com/tkf/python-epc/blob/master/examples/echo/client.el
+
 If you have carton_ installed, you can run the above sample by
 simply typing the following commands::
 
    make elpa        # install EPC in a separated environment
-   make run-sample  # run client.el
+   make run-sample  # run examples/echo/client.el
 
 .. _carton: https://github.com/rejeep/carton
