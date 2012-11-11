@@ -81,3 +81,10 @@ simply typing the following commands::
    make run-sample  # run examples/echo/client.el
 
 .. _carton: https://github.com/rejeep/carton
+
+
+For example of bidirectional communication and integration with GTK,
+see `examples/gtk/server.py`_.
+
+.. _examples/gtk/server.py:
+   https://github.com/tkf/python-epc/blob/master/examples/gtk/server.py
