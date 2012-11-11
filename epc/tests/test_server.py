@@ -79,7 +79,7 @@ class TestEPCServer(unittest.TestCase):
             (n, f.__doc__) for (n, f) in self.server.funcs.items())
         self.assertEqual(actual_docs, desired_docs)
 
-    def test_call_client_method(self):
+    def test_call_client_dummy_method(self):
         called_with = Queue.Queue()
         callback = called_with.put
         self.test_echo()  # to start connection, client must send something
