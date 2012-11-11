@@ -39,7 +39,7 @@ EPC exceptions
    :parts: 1
 
 .. autoclass:: BaseEPCError
-.. autoclass:: IDNoFound
+.. autoclass:: CallerUnknown
 .. autoclass:: EPCError
 .. autoclass:: ReturnError
 .. autoclass:: EPCErrorCallerUnknown

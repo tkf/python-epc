@@ -35,7 +35,7 @@ class BaseEPCError(Exception):
     """
 
 
-class IDNoFound(BaseEPCError):
+class CallerUnknown(BaseEPCError):
     """
     Error raised in remote method, but caller of the method is unknown.
     """
@@ -53,13 +53,13 @@ class ReturnError(BaseEPCError):
     """
 
 
-class EPCErrorCallerUnknown(IDNoFound, EPCError):
+class EPCErrorCallerUnknown(CallerUnknown, EPCError):
     """
     Same as :class:`EPCError`, but caller is unknown.
     """
 
 
-class ReturnErrorCallerUnknown(IDNoFound, ReturnError):
+class ReturnErrorCallerUnknown(CallerUnknown, ReturnError):
     """
     Same as :class:`ReturnError`, but caller is unknown.
     """
