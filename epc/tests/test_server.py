@@ -45,8 +45,11 @@ class BaseEPCServerTestCase(unittest.TestCase):
         self.assertEqual(int(result[:6], 16), len(result[6:]))
         return loads(result[6:].decode())  # skip the length part
 
+    def client_send(self, string):
+        self.client.send(encode_string(string))
+
     def check_echo(self):
-        self.client.send(encode_string('(call 1 echo (55))'))
+        self.client_send('(call 1 echo (55))')
         result = self.client.recv(1024)
         self.assertEqual(encode_string('(return 1 (55))'), result)
 
@@ -61,21 +64,21 @@ class TestEPCServerRequestHandling(BaseEPCServerTestCase):
         self.check_echo()
 
     def test_error_in_method(self):
-        self.client.send(encode_string('(call 2 bad_method nil)'))
+        self.client_send('(call 2 bad_method nil)')
         result = self.client.recv(1024)
         expected = encode_object([
             Symbol('return-error'), 2, repr(self.error_to_throw)])
         self.assertEqual(result, expected)
 
     def test_no_such_method(self):
-        self.client.send(encode_string('(call 3 no_such_method nil)'))
+        self.client_send('(call 3 no_such_method nil)')
         reply = self.receive_message()
         self.assertEqual(reply[0], Symbol('epc-error'))
         self.assertEqual(reply[1], 3)
         assert 'No such method' in reply[2]
 
     def test_methods(self):
-        self.client.send(encode_string('(methods 4)'))
+        self.client_send('(methods 4)')
         reply = self.receive_message()
         self.assertEqual(reply[0], Symbol('return'))
         self.assertEqual(reply[1], 4)
@@ -90,13 +93,13 @@ class TestEPCServerRequestHandling(BaseEPCServerTestCase):
 
     def test_unicode_message(self):
         s = "日本語能力!!ソﾊﾝｶｸ"
-        encode = lambda x: encode_string(utf8(x))
-        self.client.send(encode('(call 1 echo ("{0}"))'.format(s)))
+        self.client_send(utf8('(call 1 echo ("{0}"))'.format(s)))
         result = self.client.recv(1024)
-        self.assertEqual(encode('(return 1 ("{0}"))'.format(s)), result)
+        self.assertEqual(encode_string(utf8('(return 1 ("{0}"))'.format(s))),
+                         result)
 
     def test_invalid_sexp(self):
-        self.client.send(encode_string('(((invalid sexp!'))
+        self.client_send('(((invalid sexp!')
         reply = self.receive_message()
         self.assertEqual(reply[0].value(), Symbol('epc-error').value())
         self.assertEqual(reply[1], [])  # uid
@@ -135,7 +138,7 @@ class TestEPCServerCallClient(BaseEPCServerTestCase):
     def test_call_client_dummy_method(self):
         self.handler.call('dummy', [55], self.callback, self.errback)
         uid = self.check_call_client_dummy_method()
-        self.client.send(encode_string('(return {0} 123)'.format(uid)))
+        self.client_send('(return {0} 123)'.format(uid))
         reply = self.callback_called_with.get(True, 1)
         self.assertEqual(reply, 123)
 
@@ -143,14 +146,12 @@ class TestEPCServerCallClient(BaseEPCServerTestCase):
         self.handler.methods(self.callback)
         (methods, uid) = self.receive_message()
         self.assertEqual(methods.value(), 'methods')
-        self.client.send(encode_string(
-            '(return {0} ((dummy () "")))'.format(uid)))
+        self.client_send('(return {0} ((dummy () "")))'.format(uid))
         reply = self.callback_called_with.get(True, 1)
         self.assertEqual(reply, [[Symbol('dummy'), [], ""]])
 
     def client_send_error(self, ename, uid, message):
-        self.client.send(
-            encode_string('({0} {1} "{2}")'.format(ename, uid, message)))
+        self.client_send('({0} {1} "{2}")'.format(ename, uid, message))
 
     def check_call_client_error(self, ename, eclass, message=utf8("message")):
         self.handler.call('dummy', [55], self.callback, self.errback)
