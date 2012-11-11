@@ -172,10 +172,10 @@ class EPCHandler(SocketServer.StreamRequestHandler):
 class EPCClientManager:
 
     def __init__(self):
-        self.clients = set()
+        self.clients = []
 
     def add_client(self, handler):
-        self.clients.add(handler)
+        self.clients.append(handler)
         self.handle_client_connect(handler)
 
     def remove_client(self, handler):
