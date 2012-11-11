@@ -29,6 +29,30 @@ def encode_object(obj, **kwds):
     return encode_string(dumps(obj, **kwds))
 
 
+class BaseEPCError(Exception):
+    pass
+
+
+class IDNoFound(BaseEPCError):
+    pass
+
+
+class EPCError(BaseEPCError):
+    pass
+
+
+class ReturnError(BaseEPCError):
+    pass
+
+
+class EPCErrorNoID(IDNoFound, EPCError):
+    pass
+
+
+class ReturnErrorNoID(IDNoFound, ReturnError):
+    pass
+
+
 class EPCHandler(SocketServer.StreamRequestHandler):
 
     # These attribute are defined in `SocketServer.BaseRequestHandler`
