@@ -3,9 +3,9 @@ EPC (RPC stack for Emacs Lisp) server for Python
 
 Links:
 
-* `Documentaions (at Read the Docs) <http://python-epc.readthedocs.org/>`_
-* `Repository (at GitHub) <https://github.com/tkf/python-epc>`_
-* `Issue tracker (at GitHub) <https://github.com/tkf/python-epc/issues>`_
+* `Documentation <http://python-epc.readthedocs.org/>`_ (at Read the Docs)
+* `Repository <https://github.com/tkf/python-epc>`_ (at GitHub)
+* `Issue tracker <https://github.com/tkf/python-epc/issues>`_ (at GitHub)
 * `PyPI <http://pypi.python.org/pypi/epc>`_
 * `Travis CI <https://travis-ci.org/#!/tkf/python-epc>`_ |build-status|
 
@@ -57,7 +57,7 @@ Save the following code as ``my-server.py``.
 
 And then run the following code from Emacs.
 This is a stripped version of `examples/echo/client.el`_ included in
-python-epc repository.::
+python-epc repository_.::
 
    (require 'epc)
 
