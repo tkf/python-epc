@@ -7,7 +7,8 @@ import unittest
 
 from sexpdata import Symbol, loads
 
-from ..server import ThreadingEPCServer, encode_string, encode_object
+from ..server import ThreadingEPCServer, encode_string, encode_object, \
+    ReturnError, EPCError
 from ..py3compat import PY3, utf8, Queue
 
 
@@ -19,6 +20,7 @@ class BaseEPCServerTestCase(unittest.TestCase):
         self.server_thread = threading.Thread(target=self.server.serve_forever)
         self.server_thread.allow_reuse_address = True
         self.client = socket.create_connection(self.server.server_address)
+        self.client.settimeout(0.1)
         self.server_thread.start()
 
         def echo(*a):
@@ -120,12 +122,19 @@ class TestEPCServerCallClient(BaseEPCServerTestCase):
         self.callback_called_with = Queue.Queue()
         self.callback = self.callback_called_with.put
 
-    def test_call_client_dummy_method(self):
-        self.handler.call('dummy', [55], self.callback)
+        self.errback_called_with = Queue.Queue()
+        self.errback = self.errback_called_with.put
+
+    def check_call_client_dummy_method(self):
         (call, uid, meth, args) = self.receive_message()
         assert isinstance(uid, int)
         self.assertEqual([call, uid, meth, args],
                          [Symbol('call'), uid, Symbol('dummy'), [55]])
+        return uid
+
+    def test_call_client_dummy_method(self):
+        self.handler.call('dummy', [55], self.callback, self.errback)
+        uid = self.check_call_client_dummy_method()
         self.client.send(encode_string('(return {0} 123)'.format(uid)))
         reply = self.callback_called_with.get(True, 1)
         self.assertEqual(reply, 123)
@@ -138,3 +147,38 @@ class TestEPCServerCallClient(BaseEPCServerTestCase):
             '(return {0} ((dummy () "")))'.format(uid)))
         reply = self.callback_called_with.get(True, 1)
         self.assertEqual(reply, [[Symbol('dummy'), [], ""]])
+
+    def client_send_error(self, ename, uid, message):
+        self.client.send(
+            encode_string('({0} {1} "{2}")'.format(ename, uid, message)))
+
+    def check_call_client_error(self, ename, eclass, message=utf8("message")):
+        self.handler.call('dummy', [55], self.callback, self.errback)
+        uid = self.check_call_client_dummy_method()
+        self.client_send_error(ename, uid, message)
+        reply = self.errback_called_with.get(True, 1)
+        assert isinstance(reply, eclass)
+        self.assertEqual(reply.args, (message,))
+
+    def test_call_client_return_error(self):
+        self.check_call_client_error('return-error', ReturnError)
+
+    def test_call_client_epc_error(self):
+        self.check_call_client_error('epc-error', EPCError)
+
+    def check_dont_send_error_back(self, ename, eclass,
+                                   message=utf8("message")):
+        self.handler.call('dummy', [55])  # no callbacks!
+        uid = self.check_call_client_dummy_method()
+        self.client_send_error(ename, uid, message)
+        try:
+            result = self.client.recv(1024)
+            self.assertEqual(result, '')  # nothing goes to client
+        except socket.timeout:
+            pass
+
+    def test_dont_send_return_error_back(self):
+        self.check_dont_send_error_back('return-error', ReturnError)
+
+    def test_dont_send_epc_error_back(self):
+        self.check_dont_send_error_back('epc-error', EPCError)

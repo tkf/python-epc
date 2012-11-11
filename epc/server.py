@@ -29,6 +29,30 @@ def encode_object(obj, **kwds):
     return encode_string(dumps(obj, **kwds))
 
 
+class BaseEPCError(Exception):
+    pass
+
+
+class IDNoFound(BaseEPCError):
+    pass
+
+
+class EPCError(BaseEPCError):
+    pass
+
+
+class ReturnError(BaseEPCError):
+    pass
+
+
+class EPCErrorNoID(IDNoFound, EPCError):
+    pass
+
+
+class ReturnErrorNoID(IDNoFound, ReturnError):
+    pass
+
+
 class EPCHandler(SocketServer.StreamRequestHandler):
 
     # These attribute are defined in `SocketServer.BaseRequestHandler`
@@ -86,11 +110,16 @@ class EPCHandler(SocketServer.StreamRequestHandler):
         try:
             data = loads(sexp.decode('utf-8'))
             (name, uid, args) = (data[0].value(), data[1], data[2:])
-            self._send(getattr(self, '_handle_{0}'.format(name))(uid, *args))
+            pyname = name.replace('-', '_')
+            self._send(getattr(self, '_handle_{0}'.format(pyname))(uid, *args))
         except Exception as err:
+            if self.handle_error(err):
+                return
             if self.server.debugger:
                 traceback = sys.exc_info()[2]
                 self.server.debugger.post_mortem(traceback)
+            if isinstance(err, BaseEPCError):  # do not send error back
+                return
             name = 'epc-error' if uid is undefined else 'return-error'
             self._send([Symbol(name), uid, String(repr(err))])
 
@@ -113,13 +142,31 @@ class EPCHandler(SocketServer.StreamRequestHandler):
             in self.server.funcs.items()]]
 
     def _handle_return(self, uid, reply):
-        self.server.execute_reply(uid, reply)
+        self.server.handle_return(uid, reply)
 
-    def call(self, name, args, callback):
-        self.server.call(self, name, args, callback)
+    def _handle_return_error(self, uid, reply):
+        self.server.handle_return_error(uid, reply)
 
-    def methods(self, callback):
-        self.server.methods(self, callback)
+    def _handle_epc_error(self, uid, reply):
+        self.server.handle_epc_error(uid, reply)
+
+    def handle_error(self, err):
+        """
+        Handle error which is not handled by errback.
+
+        Return True from this function means that error is properly
+        handled, so the error is not sent to client.  Do not confuse
+        this with `SocketServer.BaseServer.handle_error`.  Default
+        implementation does nothing.  Therefore, error occurs in
+        this server is sent to client always.
+
+        """
+
+    def call(self, name, *args, **kwds):
+        self.server.call(self, name, *args, **kwds)
+
+    def methods(self, *args, **kwds):
+        self.server.methods(self, *args, **kwds)
 
 
 class EPCClientManager:
@@ -190,22 +237,47 @@ class EPCCaller:           # SocketServer.TCPServer is old style class
 
     def __init__(self):
         self.callbacks = {}
+        self.errbacks = {}
         counter = itertools.count(1)
         self.get_uid = lambda: next(counter)
 
-    def call(self, handler, name, args, callback):
+    def _set_callbacks(self, uid, callback, errback):
+        self.callbacks[uid] = callback
+        self.errbacks[uid] = errback
+
+    def _pop_callbacks(self, uid):
+        return (self.callbacks.pop(uid), self.errbacks.pop(uid))
+
+    def call(self, handler, name, args=[], callback=None, errback=None):
         uid = self.get_uid()
         handler._send([Symbol('call'), uid, Symbol(name), args])
-        self.callbacks[uid] = callback
+        self._set_callbacks(uid, callback, errback)
 
-    def methods(self, handler, callback):
+    def methods(self, handler, callback=None, errback=None):
         uid = self.get_uid()
         handler._send([Symbol('methods'), uid])
-        self.callbacks[uid] = callback
+        self._set_callbacks(uid, callback, errback)
 
-    def execute_reply(self, uid, reply):
-        callback = self.callbacks.pop(uid)
-        callback(reply)
+    def handle_return(self, uid, reply):
+        (callback, _) = self._pop_callbacks(uid)
+        if callback is not None:
+            callback(reply)
+
+    def _handle_error_reply(self, uid, reply, eclass, notfound):
+        if uid not in self.errbacks:
+            raise notfound(reply)
+        (_, errback) = self._pop_callbacks(uid)
+        error = eclass(reply)
+        if errback is None:
+            raise error
+        else:
+            errback(error)
+
+    def handle_return_error(self, uid, reply):
+        self._handle_error_reply(uid, reply, ReturnError, ReturnErrorNoID)
+
+    def handle_epc_error(self, uid, reply):
+        self._handle_error_reply(uid, reply, EPCError, EPCErrorNoID)
 
 
 class EPCServer(SocketServer.TCPServer, EPCClientManager,
