@@ -11,7 +11,7 @@ from ..server import ThreadingEPCServer, encode_string, encode_object
 from ..py3compat import PY3, utf8, Queue
 
 
-class TestEPCServer(unittest.TestCase):
+class BaseEPCServerTestCase(unittest.TestCase):
 
     def setUp(self):
         # See: http://stackoverflow.com/questions/7720953
@@ -42,6 +42,9 @@ class TestEPCServer(unittest.TestCase):
         result = self.client.recv(1024)
         self.assertEqual(int(result[:6], 16), len(result[6:]))
         return loads(result[6:].decode())  # skip the length part
+
+
+class TestEPCServer(BaseEPCServerTestCase):
 
     def get_client_handler(self):
         return next(iter(self.server.clients))
