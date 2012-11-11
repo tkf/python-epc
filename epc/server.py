@@ -116,6 +116,8 @@ class EPCHandler(SocketServer.StreamRequestHandler):
             if self.server.debugger:
                 traceback = sys.exc_info()[2]
                 self.server.debugger.post_mortem(traceback)
+            if isinstance(err, BaseEPCError):  # do not send error back
+                return
             name = 'epc-error' if uid is undefined else 'return-error'
             self._send([Symbol(name), uid, String(repr(err))])
 
