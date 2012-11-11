@@ -96,7 +96,10 @@ simply typing the following commands::
 
 
 For example of bidirectional communication and integration with GTK,
-see `examples/gtk/server.py`_.
+see `examples/gtk/server.py`_.  You can run this example by::
+
+   make elpa
+   make run-gtk-sample  # run examples/gtk/client.el
 
 .. _examples/gtk/server.py:
    https://github.com/tkf/python-epc/blob/master/examples/gtk/server.py
