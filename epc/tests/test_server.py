@@ -43,6 +43,9 @@ class TestEPCServer(unittest.TestCase):
         self.assertEqual(int(result[:6], 16), len(result[6:]))
         return loads(result[6:].decode())  # skip the length part
 
+    def get_client_handler(self):
+        return next(iter(self.server.clients))
+
     def test_echo(self):
         self.client.send(encode_string('(call 1 echo (55))'))
         result = self.client.recv(1024)
@@ -75,6 +78,15 @@ class TestEPCServer(unittest.TestCase):
         desired_docs = dict(
             (n, f.__doc__) for (n, f) in self.server.funcs.items())
         self.assertEqual(actual_docs, desired_docs)
+
+    def test_call_client_method(self):
+        self.test_echo()  # to start connection, client must send something
+        handler = self.get_client_handler()
+        handler.call('dummy', [55], lambda x: self.assertEqual(x, 123))
+        (call, uid, meth, args) = self.receive_message()
+        self.assertEqual(call.value(), 'call')
+        assert isinstance(uid, int)
+        self.client.send(encode_string('(return {0} 123)'.format(uid)))
 
     def test_print_port(self):
         if PY3:
