@@ -209,6 +209,9 @@ class EPCClientManager:
 
     def __init__(self):
         self.clients = []
+        """
+        A list of :class:`EPCHandler` object for connected clients.
+        """
 
     def add_client(self, handler):
         self.clients.append(handler)
