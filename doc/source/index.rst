@@ -30,13 +30,20 @@ Handler
 .. autoclass:: EPCHandler
 
 
-EPC exception
-=============
+EPC exceptions
+==============
 
 .. inheritance-diagram::
    EPCErrorNoID
    ReturnErrorNoID
    :parts: 1
+
+.. autoclass:: BaseEPCError
+.. autoclass:: IDNoFound
+.. autoclass:: EPCError
+.. autoclass:: ReturnError
+.. autoclass:: EPCErrorNoID
+.. autoclass:: ReturnErrorNoID
 
 
 Indices and tables

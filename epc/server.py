@@ -30,27 +30,39 @@ def encode_object(obj, **kwds):
 
 
 class BaseEPCError(Exception):
-    pass
+    """
+    All exceptions from remote method are derived from this class.
+    """
 
 
 class IDNoFound(BaseEPCError):
-    pass
+    """
+    Error raised in remote method, but caller of the method is unknown.
+    """
 
 
 class EPCError(BaseEPCError):
-    pass
+    """
+    Error returned by `epc-error` protocol.
+    """
 
 
 class ReturnError(BaseEPCError):
-    pass
+    """
+    Error returned by `return-error` protocol.
+    """
 
 
 class EPCErrorNoID(IDNoFound, EPCError):
-    pass
+    """
+    Same as :class:`EPCError`, but caller is unknown.
+    """
 
 
 class ReturnErrorNoID(IDNoFound, ReturnError):
-    pass
+    """
+    Same as :class:`ReturnError`, but caller is unknown.
+    """
 
 
 class EPCHandler(SocketServer.StreamRequestHandler):
