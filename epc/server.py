@@ -53,13 +53,13 @@ class ReturnError(BaseEPCError):
     """
 
 
-class EPCErrorNoID(IDNoFound, EPCError):
+class EPCErrorCallerUnknown(IDNoFound, EPCError):
     """
     Same as :class:`EPCError`, but caller is unknown.
     """
 
 
-class ReturnErrorNoID(IDNoFound, ReturnError):
+class ReturnErrorCallerUnknown(IDNoFound, ReturnError):
     """
     Same as :class:`ReturnError`, but caller is unknown.
     """
@@ -310,10 +310,12 @@ class EPCCaller:           # SocketServer.TCPServer is old style class
             errback(error)
 
     def handle_return_error(self, uid, reply):
-        self._handle_error_reply(uid, reply, ReturnError, ReturnErrorNoID)
+        self._handle_error_reply(uid, reply, ReturnError,
+                                 ReturnErrorCallerUnknown)
 
     def handle_epc_error(self, uid, reply):
-        self._handle_error_reply(uid, reply, EPCError, EPCErrorNoID)
+        self._handle_error_reply(uid, reply, EPCError,
+                                 EPCErrorCallerUnknown)
 
 
 class EPCServer(SocketServer.TCPServer, EPCClientManager,

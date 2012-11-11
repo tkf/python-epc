@@ -34,16 +34,16 @@ EPC exceptions
 ==============
 
 .. inheritance-diagram::
-   EPCErrorNoID
-   ReturnErrorNoID
+   EPCErrorCallerUnknown
+   ReturnErrorCallerUnknown
    :parts: 1
 
 .. autoclass:: BaseEPCError
 .. autoclass:: IDNoFound
 .. autoclass:: EPCError
 .. autoclass:: ReturnError
-.. autoclass:: EPCErrorNoID
-.. autoclass:: ReturnErrorNoID
+.. autoclass:: EPCErrorCallerUnknown
+.. autoclass:: ReturnErrorCallerUnknown
 
 
 Indices and tables
