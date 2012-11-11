@@ -11,7 +11,7 @@ from ..server import ThreadingEPCServer, encode_string, encode_object
 from ..py3compat import PY3, utf8, Queue
 
 
-class TestEPCServer(unittest.TestCase):
+class BaseEPCServerTestCase(unittest.TestCase):
 
     def setUp(self):
         # See: http://stackoverflow.com/questions/7720953
@@ -43,13 +43,20 @@ class TestEPCServer(unittest.TestCase):
         self.assertEqual(int(result[:6], 16), len(result[6:]))
         return loads(result[6:].decode())  # skip the length part
 
-    def get_client_handler(self):
-        return next(iter(self.server.clients))
-
-    def test_echo(self):
+    def check_echo(self):
         self.client.send(encode_string('(call 1 echo (55))'))
         result = self.client.recv(1024)
         self.assertEqual(encode_string('(return 1 (55))'), result)
+
+
+class TestEPCServerRequestHandling(BaseEPCServerTestCase):
+
+    """
+    Test that EPCServer handles request from client properly.
+    """
+
+    def test_echo(self):
+        self.check_echo()
 
     def test_error_in_method(self):
         self.client.send(encode_string('(call 2 bad_method nil)'))
@@ -79,48 +86,6 @@ class TestEPCServer(unittest.TestCase):
             (n, f.__doc__) for (n, f) in self.server.funcs.items())
         self.assertEqual(actual_docs, desired_docs)
 
-    def test_call_client_dummy_method(self):
-        called_with = Queue.Queue()
-        callback = called_with.put
-        self.test_echo()  # to start connection, client must send something
-        handler = self.get_client_handler()
-        handler.call('dummy', [55], callback)
-        (call, uid, meth, args) = self.receive_message()
-        self.assertEqual(call.value(), 'call')
-        assert isinstance(uid, int)
-        assert isinstance(meth, Symbol)
-        self.assertEqual(meth.value(), 'dummy')
-        self.assertEqual(args, [55])
-        self.client.send(encode_string('(return {0} 123)'.format(uid)))
-        reply = called_with.get(True, 1)
-        self.assertEqual(reply, 123)
-
-    def test_call_client_methods_info(self):
-        called_with = Queue.Queue()
-        callback = called_with.put
-        self.test_echo()  # to start connection, client must send something
-        handler = self.get_client_handler()
-        handler.methods(callback)
-        (methods, uid) = self.receive_message()
-        self.assertEqual(methods.value(), 'methods')
-        self.client.send(encode_string(
-            '(return {0} ((dummy () "")))'.format(uid)))
-        reply = called_with.get(True, 1)
-        self.assertEqual(len(reply), 1)
-        self.assertEqual(len(reply[0]), 3)
-        self.assertEqual(reply[0][0].value(), 'dummy')
-        self.assertEqual(reply[0][1], [])
-        self.assertEqual(reply[0][2], "")
-
-    def test_print_port(self):
-        if PY3:
-            stream = io.StringIO()
-        else:
-            stream = io.BytesIO()
-        self.server.print_port(stream)
-        self.assertEqual(stream.getvalue(),
-                         '{0}\n'.format(self.server.server_address[1]))
-
     def test_unicode_message(self):
         s = "日本語能力!!ソﾊﾝｶｸ"
         encode = lambda x: encode_string(utf8(x))
@@ -134,3 +99,42 @@ class TestEPCServer(unittest.TestCase):
         self.assertEqual(reply[0].value(), Symbol('epc-error').value())
         self.assertEqual(reply[1], [])  # uid
         assert 'Not enough closing brackets.' in reply[2]
+
+    def test_print_port(self):
+        if PY3:
+            stream = io.StringIO()
+        else:
+            stream = io.BytesIO()
+        self.server.print_port(stream)
+        self.assertEqual(stream.getvalue(),
+                         '{0}\n'.format(self.server.server_address[1]))
+
+
+class TestEPCServerCallClient(BaseEPCServerTestCase):
+
+    def setUp(self):
+        super(TestEPCServerCallClient, self).setUp()
+        self.check_echo()  # to start connection, client must send something
+        self.handler = next(iter(self.server.clients))
+
+        self.callback_called_with = Queue.Queue()
+        self.callback = self.callback_called_with.put
+
+    def test_call_client_dummy_method(self):
+        self.handler.call('dummy', [55], self.callback)
+        (call, uid, meth, args) = self.receive_message()
+        assert isinstance(uid, int)
+        self.assertEqual([call, uid, meth, args],
+                         [Symbol('call'), uid, Symbol('dummy'), [55]])
+        self.client.send(encode_string('(return {0} 123)'.format(uid)))
+        reply = self.callback_called_with.get(True, 1)
+        self.assertEqual(reply, 123)
+
+    def test_call_client_methods_info(self):
+        self.handler.methods(self.callback)
+        (methods, uid) = self.receive_message()
+        self.assertEqual(methods.value(), 'methods')
+        self.client.send(encode_string(
+            '(return {0} ((dummy () "")))'.format(uid)))
+        reply = self.callback_called_with.get(True, 1)
+        self.assertEqual(reply, [[Symbol('dummy'), [], ""]])
