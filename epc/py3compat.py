@@ -6,6 +6,11 @@ try:
 except:
     import socketserver as SocketServer
 
+try:
+    import Queue
+except:
+    import queue as Queue
+
 
 if PY3:
     utf8 = lambda s: s

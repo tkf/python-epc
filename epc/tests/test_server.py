@@ -8,7 +8,7 @@ import unittest
 from sexpdata import Symbol, loads
 
 from ..server import ThreadingEPCServer, encode_string, encode_object
-from ..py3compat import PY3, utf8
+from ..py3compat import PY3, utf8, Queue
 
 
 class TestEPCServer(unittest.TestCase):
@@ -80,13 +80,18 @@ class TestEPCServer(unittest.TestCase):
         self.assertEqual(actual_docs, desired_docs)
 
     def test_call_client_method(self):
+        called_with = Queue.Queue()
+        callback = called_with.put
         self.test_echo()  # to start connection, client must send something
         handler = self.get_client_handler()
-        handler.call('dummy', [55], lambda x: self.assertEqual(x, 123))
+        handler.call('dummy', [55], callback)
         (call, uid, meth, args) = self.receive_message()
         self.assertEqual(call.value(), 'call')
         assert isinstance(uid, int)
+        self.assertEqual(args, [55])
         self.client.send(encode_string('(return {0} 123)'.format(uid)))
+        reply = called_with.get(True, 1)
+        self.assertEqual(reply, 123)
 
     def test_print_port(self):
         if PY3:

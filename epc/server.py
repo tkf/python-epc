@@ -195,7 +195,7 @@ class EPCCaller:           # SocketServer.TCPServer is old style class
 
     def call(self, handler, name, args, callback):
         uid = self.get_uid()
-        handler._send([Symbol('call'), uid, name] + args)
+        handler._send([Symbol('call'), uid, name, args])
         self.callbacks[uid] = callback
 
     def methods(self, handler, callback):
