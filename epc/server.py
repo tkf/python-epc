@@ -259,6 +259,10 @@ class EPCServer(SocketServer.TCPServer, EPCDispacher):
 # see also: SimpleXMLRPCServer.SimpleXMLRPCDispatcher
 
 
+class ThreadingEPCServer(SocketServer.ThreadingMixIn, EPCServer):
+    pass
+
+
 def echo_server(address='localhost', port=0):
     server = EPCServer((address, port))
     server.logger.setLevel(logging.DEBUG)
