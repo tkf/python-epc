@@ -188,8 +188,6 @@ class EPCDispacher:        # SocketServer.TCPServer is old style class
 
 class EPCCaller:           # SocketServer.TCPServer is old style class
 
-    logger = _logger
-
     def __init__(self):
         self.callbacks = {}
         counter = itertools.count(1)
