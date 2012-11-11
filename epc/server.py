@@ -29,25 +29,25 @@ def encode_object(obj, **kwds):
     return encode_string(dumps(obj, **kwds))
 
 
-class BaseEPCError(Exception):
+class BaseRemoteError(Exception):
     """
     All exceptions from remote method are derived from this class.
     """
 
 
-class CallerUnknown(BaseEPCError):
+class CallerUnknown(BaseRemoteError):
     """
     Error raised in remote method, but caller of the method is unknown.
     """
 
 
-class EPCError(BaseEPCError):
+class EPCError(BaseRemoteError):
     """
     Error returned by `epc-error` protocol.
     """
 
 
-class ReturnError(BaseEPCError):
+class ReturnError(BaseRemoteError):
     """
     Error returned by `return-error` protocol.
     """
@@ -130,7 +130,7 @@ class EPCHandler(SocketServer.StreamRequestHandler):
             if self.server.debugger:
                 traceback = sys.exc_info()[2]
                 self.server.debugger.post_mortem(traceback)
-            if isinstance(err, BaseEPCError):  # do not send error back
+            if isinstance(err, BaseRemoteError):  # do not send error back
                 return
             name = 'epc-error' if uid is undefined else 'return-error'
             self._send([Symbol(name), uid, String(repr(err))])

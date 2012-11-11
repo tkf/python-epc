@@ -39,7 +39,7 @@ EPC exceptions
    ReturnErrorCallerUnknown
    :parts: 1
 
-.. autoclass:: BaseEPCError
+.. autoclass:: BaseRemoteError
 .. autoclass:: CallerUnknown
 .. autoclass:: EPCError
 .. autoclass:: ReturnError
