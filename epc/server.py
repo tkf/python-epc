@@ -325,7 +325,12 @@ class EPCServer(SocketServer.TCPServer, EPCClientManager,
                 EPCDispacher, EPCCaller):
 
     """
-    A server class to publish Python functions via EPC protocol.
+    A server class to publish functions and call functions via EPC protocol.
+
+    To publish Python functions, all you need is
+    :meth:`register_function() <EPCDispacher.register_function>`,
+    :meth:`print_port` and
+    :meth:`serve_forever() <SocketServer.BaseServer.serve_forever>`.
 
     >>> server = EPCServer(('localhost', 0))
     >>> def echo(*a):
@@ -334,8 +339,18 @@ class EPCServer(SocketServer.TCPServer, EPCClientManager,
     >>> server.print_port()                                #doctest: +SKIP
     >>> server.serve_forever()                             #doctest: +SKIP
 
+    To call client's method, use :attr:`clients <EPCClientManager.clients>`,
+    to get client handler and use its :meth:`EPCHandler.call` and
+    :meth:`EPCHandler.methods` methods to communicate with connected client.
+
+    >>> handler = server.clients[0]                        #doctest: +SKIP
+    >>> def callback(reply):
+    ...     print(reply)
+    >>> handler.call('method_name', ['arg-1', 'arg-2', 'arg-3'],
+    ...              callback)                             #doctest: +SKIP
+
     See :class:`SocketServer.TCPServer` and :class:`SocketServer.BaseServer`
-    to see other methods that can be used.
+    for other usable methods.
 
     """
 
