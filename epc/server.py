@@ -43,6 +43,16 @@ class EPCHandler(SocketServer.StreamRequestHandler):
 
     logger = _logger
 
+    def setup(self):
+        SocketServer.StreamRequestHandler.setup(self)
+        self.server.add_client(self)
+
+    def finish(self):
+        try:
+            SocketServer.StreamRequestHandler.setup(self)
+        finally:
+            self.server.remove_client(self)
+
     def _recv(self):
         while True:
             self.logger.debug('receiving...')
@@ -115,6 +125,42 @@ class EPCHandler(SocketServer.StreamRequestHandler):
     #     SocketServer.StreamRequestHandler.finish(self)
 
 
+class EPCClientManager:
+
+    def __init__(self):
+        self.clients = set()
+
+    def add_client(self, handler):
+        self.clients.add(handler)
+        self.after_add_client(handler)
+
+    def remove_client(self, handler):
+        self.clients.remove(handler)
+        self.after_remove_client(handler)
+
+    def after_add_client(self, handler):
+        """
+        Handler which is called with a newly connected `client`.
+
+        :type  handler: EPCHandler
+        :arg   handler: Object for handling request from the client.
+
+        Default implementation does nothing.
+
+        """
+
+    def after_remove_client(self, handler):
+        """
+        Handler which is called with a disconnected `client`.
+
+        :type  handler: EPCHandler
+        :arg   handler: Object for handling request from the client.
+
+        Default implementation does nothing.
+
+        """
+
+
 class EPCDispacher:        # SocketServer.TCPServer is old style class
 
     logger = _logger
@@ -170,7 +216,7 @@ class EPCCaller:           # SocketServer.TCPServer is old style class
     # If not, having this class and `return` handler makes no sense.
 
 
-class EPCServer(SocketServer.TCPServer, EPCDispacher):
+class EPCServer(SocketServer.TCPServer, EPCClientManager, EPCDispacher):
 
     """
     A server class to publish Python functions via EPC protocol.
@@ -199,6 +245,7 @@ class EPCServer(SocketServer.TCPServer, EPCDispacher):
         # `self.RequestHandlerClass(request, client_address, self)`.
         SocketServer.TCPServer.__init__(
             self, server_address, RequestHandlerClass, bind_and_activate)
+        EPCClientManager.__init__(self)
         EPCDispacher.__init__(self)
         self.logger.debug('-' * 75)
         self.logger.debug(
