@@ -1,5 +1,20 @@
 #!/usr/bin/env python
 
+"""
+An example of using GTK from Emacs.
+
+* Manipulate GTK window from Emacs:
+
+  - `destroy` (`pyepc-sample-gtk-destroy`):
+     Close GTK window from Emacs command
+
+  - `set_button_label` (`pyepc-sample-gtk-set-button-label`):
+     Change GUI button label from Emacs command.
+
+* (Not yet implemented) Manipulate Emacs from GTK GUI.
+
+"""
+
 import threading
 import logging
 
@@ -37,8 +52,12 @@ class SampleGTKServer(object):
 
     def setup_epc(self):
         self.server = ThreadingEPCServer(('localhost', 0))
+
+        # Setup logger
         self.server.logger.setLevel(logging.DEBUG)
         setuplogfile()
+
+        # Setup server thread
         self.server_thread = threading.Thread(target=self.server.serve_forever)
         self.server_thread.allow_reuse_address = True
 
