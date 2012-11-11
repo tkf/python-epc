@@ -43,10 +43,12 @@ class EPCHandler(SocketServer.StreamRequestHandler):
 
     logger = _logger
 
+    @autolog('debug')
     def setup(self):
         SocketServer.StreamRequestHandler.setup(self)
         self.server.add_client(self)
 
+    @autolog('debug')
     def finish(self):
         try:
             SocketServer.StreamRequestHandler.setup(self)
@@ -115,14 +117,6 @@ class EPCHandler(SocketServer.StreamRequestHandler):
             # FIXNE: implement arg-specs
             for (name, func)
             in self.server.funcs.items()]]
-
-    # @autolog('debug')
-    # def setup(self):
-    #     SocketServer.StreamRequestHandler.setup(self)
-
-    # @autolog('debug')
-    # def finish(self):
-    #     SocketServer.StreamRequestHandler.finish(self)
 
 
 class EPCClientManager:
