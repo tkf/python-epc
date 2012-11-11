@@ -137,7 +137,7 @@ class EPCHandler(SocketServer.StreamRequestHandler):
             in self.server.funcs.items()]]
 
     def _handle_return(self, uid, reply):
-        self.server.execute_reply(uid, reply)
+        self.server.handle_return(uid, reply)
 
     def call(self, name, args, callback):
         self.server.call(self, name, args, callback)
@@ -234,7 +234,7 @@ class EPCCaller:           # SocketServer.TCPServer is old style class
         handler._send([Symbol('methods'), uid])
         self._set_callbacks(uid, callback, errback)
 
-    def execute_reply(self, uid, reply):
+    def handle_return(self, uid, reply):
         callback = self.callbacks.pop(uid)
         callback(reply)
 
