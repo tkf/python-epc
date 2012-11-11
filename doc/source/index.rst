@@ -19,6 +19,7 @@ Server
 
 .. autoclass:: EPCClientManager
 
+.. autoclass:: ThreadingEPCServer
 
 Handler
 -------

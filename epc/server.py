@@ -424,7 +424,17 @@ class EPCServer(SocketServer.TCPServer, EPCClientManager,
 
 
 class ThreadingEPCServer(SocketServer.ThreadingMixIn, EPCServer):
-    pass
+    """
+    Class :class:`EPCServer` mixed with :class:`SocketServer.ThreadingMixIn`.
+
+    Use this class when combining EPCServer with other Python module
+    which has event loop, such as GUI modules.  For example, see
+    `examples/gtk/server.py`_ for how to use this class with GTK
+
+    .. _examples/gtk/server.py:
+       https://github.com/tkf/python-epc/blob/master/examples/gtk/server.py
+
+    """
 
 
 def echo_server(address='localhost', port=0):
