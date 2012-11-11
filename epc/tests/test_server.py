@@ -93,6 +93,23 @@ class TestEPCServer(unittest.TestCase):
         reply = called_with.get(True, 1)
         self.assertEqual(reply, 123)
 
+    def test_call_client_methods_info(self):
+        called_with = Queue.Queue()
+        callback = called_with.put
+        self.test_echo()  # to start connection, client must send something
+        handler = self.get_client_handler()
+        handler.methods(callback)
+        (methods, uid) = self.receive_message()
+        self.assertEqual(methods.value(), 'methods')
+        self.client.send(encode_string(
+            '(return {0} ((dummy () "")))'.format(uid)))
+        reply = called_with.get(True, 1)
+        self.assertEqual(len(reply), 1)
+        self.assertEqual(len(reply[0]), 3)
+        self.assertEqual(reply[0][0].value(), 'dummy')
+        self.assertEqual(reply[0][1], [])
+        self.assertEqual(reply[0][2], "")
+
     def test_print_port(self):
         if PY3:
             stream = io.StringIO()
