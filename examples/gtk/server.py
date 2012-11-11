@@ -11,7 +11,9 @@ An example of using GTK from Emacs.
   - `set_button_label` (`pyepc-sample-gtk-set-button-label`):
      Change GUI button label from Emacs command.
 
-* (Not yet implemented) Manipulate Emacs from GTK GUI.
+* Manipulate Emacs from GTK GUI.
+
+  - `message`: Notify when GUI button is clicked.
 
 """
 
@@ -71,9 +73,12 @@ class SampleGTKServer(object):
         self.server.register_function(destroy)
         self.server.register_function(set_button_label)
 
+    def get_client_handler(self):
+        return next(iter(self.server.clients))
+
     def clicked(self, widget, data=None):
-        # TODO: call client function here
-        pass
+        handler = self.get_client_handler()
+        handler.call('message', ["clicked!"], lambda _: None)
 
     def destroy(self, widget, data=None):
         self.server.shutdown()

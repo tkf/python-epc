@@ -17,6 +17,10 @@
                  (list (expand-file-name "server.py" pyepc-sample-gtk-dir)))
   "EPC manager object for GTK server example.")
 
+(epc:define-method pyepc-sample-gtk-epc
+                   'message
+                   (lambda (&rest args) (message "%S" args)))
+
 (defun pyepc-sample-gtk-destroy ()
   "Close GTK window"
   (interactive)
