@@ -113,6 +113,8 @@ class EPCHandler(SocketServer.StreamRequestHandler):
             pyname = name.replace('-', '_')
             self._send(getattr(self, '_handle_{0}'.format(pyname))(uid, *args))
         except Exception as err:
+            if self.handle_error(err):
+                return
             if self.server.debugger:
                 traceback = sys.exc_info()[2]
                 self.server.debugger.post_mortem(traceback)
@@ -147,6 +149,18 @@ class EPCHandler(SocketServer.StreamRequestHandler):
 
     def _handle_epc_error(self, uid, reply):
         self.server.handle_epc_error(uid, reply)
+
+    def handle_error(self, err):
+        """
+        Handle error which is not handled by errback.
+
+        Return True from this function means that error is properly
+        handled, so the error is not sent to client.  Do not confuse
+        this with `SocketServer.BaseServer.handle_error`.  Default
+        implementation does nothing.  Therefore, error occurs in
+        this server is sent to client always.
+
+        """
 
     def call(self, name, *args, **kwds):
         self.server.call(self, name, *args, **kwds)
