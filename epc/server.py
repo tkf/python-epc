@@ -1,5 +1,6 @@
 import sys
 import logging
+import itertools
 
 from sexpdata import loads, dumps, Symbol, String
 
@@ -148,21 +149,15 @@ class EPCCaller:           # SocketServer.TCPServer is old style class
 
     def __init__(self):
         self.callbacks = {}
-
-        def uid():
-            i = 0
-            while True:
-                yield i
-                i += 1
-        self.uid = uid().next
+        self.get_uid = itertools.count(1).next
 
     def call(self, name, args, callback):
-        uid = self.uid()
+        uid = self.get_uid()
         self._send_object([Symbol('call'), uid, name] + args)
         self.callbacks[uid] = callback
 
     def methods(self, name, callback):
-        uid = self.uid()
+        uid = self.get_uid()
         self._send_object([Symbol('methods'), uid])
         self.callbacks[uid] = callback
 
