@@ -123,11 +123,9 @@ class TestEPCServerCallClient(BaseEPCServerTestCase):
     def test_call_client_dummy_method(self):
         self.handler.call('dummy', [55], self.callback)
         (call, uid, meth, args) = self.receive_message()
-        self.assertEqual(call.value(), 'call')
         assert isinstance(uid, int)
-        assert isinstance(meth, Symbol)
-        self.assertEqual(meth.value(), 'dummy')
-        self.assertEqual(args, [55])
+        self.assertEqual([call, uid, meth, args],
+                         [Symbol('call'), uid, Symbol('dummy'), [55]])
         self.client.send(encode_string('(return {0} 123)'.format(uid)))
         reply = self.callback_called_with.get(True, 1)
         self.assertEqual(reply, 123)
