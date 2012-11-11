@@ -139,8 +139,4 @@ class TestEPCServerCallClient(BaseEPCServerTestCase):
         self.client.send(encode_string(
             '(return {0} ((dummy () "")))'.format(uid)))
         reply = self.callback_called_with.get(True, 1)
-        self.assertEqual(len(reply), 1)
-        self.assertEqual(len(reply[0]), 3)
-        self.assertEqual(reply[0][0].value(), 'dummy')
-        self.assertEqual(reply[0][1], [])
-        self.assertEqual(reply[0][2], "")
+        self.assertEqual(reply, [[Symbol('dummy'), [], ""]])
