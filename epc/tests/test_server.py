@@ -43,16 +43,20 @@ class BaseEPCServerTestCase(unittest.TestCase):
         self.assertEqual(int(result[:6], 16), len(result[6:]))
         return loads(result[6:].decode())  # skip the length part
 
-
-class TestEPCServer(BaseEPCServerTestCase):
-
-    def get_client_handler(self):
-        return next(iter(self.server.clients))
-
-    def test_echo(self):
+    def check_echo(self):
         self.client.send(encode_string('(call 1 echo (55))'))
         result = self.client.recv(1024)
         self.assertEqual(encode_string('(return 1 (55))'), result)
+
+
+class TestEPCServerRequestHandling(BaseEPCServerTestCase):
+
+    """
+    Test that EPCServer handles request from client properly.
+    """
+
+    def test_echo(self):
+        self.check_echo()
 
     def test_error_in_method(self):
         self.client.send(encode_string('(call 2 bad_method nil)'))
@@ -82,10 +86,42 @@ class TestEPCServer(BaseEPCServerTestCase):
             (n, f.__doc__) for (n, f) in self.server.funcs.items())
         self.assertEqual(actual_docs, desired_docs)
 
+    def test_unicode_message(self):
+        s = "日本語能力!!ソﾊﾝｶｸ"
+        encode = lambda x: encode_string(utf8(x))
+        self.client.send(encode('(call 1 echo ("{0}"))'.format(s)))
+        result = self.client.recv(1024)
+        self.assertEqual(encode('(return 1 ("{0}"))'.format(s)), result)
+
+    def test_invalid_sexp(self):
+        self.client.send(encode_string('(((invalid sexp!'))
+        reply = self.receive_message()
+        self.assertEqual(reply[0].value(), Symbol('epc-error').value())
+        self.assertEqual(reply[1], [])  # uid
+        assert 'Not enough closing brackets.' in reply[2]
+
+    def test_print_port(self):
+        if PY3:
+            stream = io.StringIO()
+        else:
+            stream = io.BytesIO()
+        self.server.print_port(stream)
+        self.assertEqual(stream.getvalue(),
+                         '{0}\n'.format(self.server.server_address[1]))
+
+
+class TestEPCServerCallClient(BaseEPCServerTestCase):
+
+    def setUp(self):
+        super(TestEPCServerCallClient, self).setUp()
+        self.check_echo()  # to start connection, client must send something
+
+    def get_client_handler(self):
+        return next(iter(self.server.clients))
+
     def test_call_client_dummy_method(self):
         called_with = Queue.Queue()
         callback = called_with.put
-        self.test_echo()  # to start connection, client must send something
         handler = self.get_client_handler()
         handler.call('dummy', [55], callback)
         (call, uid, meth, args) = self.receive_message()
@@ -101,7 +137,6 @@ class TestEPCServer(BaseEPCServerTestCase):
     def test_call_client_methods_info(self):
         called_with = Queue.Queue()
         callback = called_with.put
-        self.test_echo()  # to start connection, client must send something
         handler = self.get_client_handler()
         handler.methods(callback)
         (methods, uid) = self.receive_message()
@@ -114,26 +149,3 @@ class TestEPCServer(BaseEPCServerTestCase):
         self.assertEqual(reply[0][0].value(), 'dummy')
         self.assertEqual(reply[0][1], [])
         self.assertEqual(reply[0][2], "")
-
-    def test_print_port(self):
-        if PY3:
-            stream = io.StringIO()
-        else:
-            stream = io.BytesIO()
-        self.server.print_port(stream)
-        self.assertEqual(stream.getvalue(),
-                         '{0}\n'.format(self.server.server_address[1]))
-
-    def test_unicode_message(self):
-        s = "日本語能力!!ソﾊﾝｶｸ"
-        encode = lambda x: encode_string(utf8(x))
-        self.client.send(encode('(call 1 echo ("{0}"))'.format(s)))
-        result = self.client.recv(1024)
-        self.assertEqual(encode('(return 1 ("{0}"))'.format(s)), result)
-
-    def test_invalid_sexp(self):
-        self.client.send(encode_string('(((invalid sexp!'))
-        reply = self.receive_message()
-        self.assertEqual(reply[0].value(), Symbol('epc-error').value())
-        self.assertEqual(reply[1], [])  # uid
-        assert 'Not enough closing brackets.' in reply[2]
