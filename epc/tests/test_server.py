@@ -9,7 +9,7 @@ from contextlib import contextmanager
 from sexpdata import Symbol, loads
 
 from ..server import ThreadingEPCServer, encode_string, encode_object, \
-    ReturnError, EPCError
+    ReturnError, EPCError, ReturnErrorCallerUnknown, EPCErrorCallerUnknown
 from ..py3compat import PY3, utf8, Queue
 
 
@@ -132,12 +132,12 @@ class TestEPCServerRequestHandling(BaseEPCServerTestCase):
     def test_return_error_caller_unkown(self):
         self.check_caller_unkown(
             '(return-error nil "message")',
-            ReturnError, ('message',))
+            ReturnErrorCallerUnknown, ('message',))
 
     def test_epc_error_caller_unkown(self):
         self.check_caller_unkown(
             '(epc-error nil "message")',
-            EPCError, ('message',))
+            EPCErrorCallerUnknown, ('message',))
 
     def test_print_port(self):
         if PY3:
