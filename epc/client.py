@@ -27,7 +27,7 @@ class EPCClient(object):
             import socket
             self.socket = socket.create_connection(socket_or_address)
         else:
-            self.socket = socket
+            self.socket = socket_or_address
         self.reader = SocketReader(self.socket)
         self._messages = itermessage(self.reader.read)
         counter = itertools.count(1)
