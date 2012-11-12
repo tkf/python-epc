@@ -40,20 +40,16 @@ class TestClient(unittest.TestCase):
             rest[0] = rest[0].value()
         return [name, uid] + rest
 
-    def test_call_return(self):
+    def check_return(self, desired_return, name, *args):
         uid = 1
-        returned = 'some value'
-        self.set_next_reply('return', uid, returned)
-        got = self.client.call('dummy', [1, 2, 3])
-        self.assertEqual(got, returned)
+        self.set_next_reply('return', uid, desired_return)
+        got = getattr(self.client, name)(*args)
+        self.assertEqual(got, desired_return)
         sent = self.sent_message()
-        self.assertEqual(sent, ['call', uid, 'dummy', [1, 2, 3]])
+        self.assertEqual(sent, [name, uid] + list(args))
+
+    def test_call_return(self):
+        self.check_return('some value', 'call', 'dummy', [1, 2, 3])
 
     def test_methods_return(self):
-        uid = 1
-        returned = [[Symbol('dummy'), [], "document"]]
-        self.set_next_reply('return', uid, returned)
-        got = self.client.methods()
-        self.assertEqual(got, returned)
-        sent = self.sent_message()
-        self.assertEqual(sent, ['methods', uid])
+        self.check_return([[Symbol('dummy'), [], "document"]], 'methods')
