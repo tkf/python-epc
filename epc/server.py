@@ -303,7 +303,7 @@ class EPCCaller:           # SocketServer.TCPServer is old style class
             callback(reply)
 
     def _handle_error_reply(self, uid, reply, eclass, notfound):
-        if uid not in self.errbacks:
+        if not (isinstance(uid, int) and uid in self.errbacks):
             raise notfound(reply)
         (_, errback) = self._pop_callbacks(uid)
         error = eclass(reply)
