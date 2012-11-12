@@ -4,12 +4,26 @@ import io
 import socket
 import threading
 import unittest
+from contextlib import contextmanager
 
 from sexpdata import Symbol, loads
 
 from ..server import ThreadingEPCServer, encode_string, encode_object, \
     ReturnError, EPCError
 from ..py3compat import PY3, utf8, Queue
+
+
+@contextmanager
+def mockedattr(object, name, replace):
+    """
+    Mock `object.name` attribute using `replace`.
+    """
+    original = getattr(object, name)
+    try:
+        setattr(object, name, replace)
+        yield
+    finally:
+        setattr(object, name, original)
 
 
 class BaseEPCServerTestCase(unittest.TestCase):
