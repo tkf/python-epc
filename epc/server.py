@@ -2,10 +2,11 @@ import sys
 import logging
 import itertools
 
-from sexpdata import loads, dumps, Symbol, String
+from sexpdata import loads, Symbol, String
 
 from .py3compat import SocketServer
 from .utils import autolog
+from .core import encode_object
 
 
 _logger = logging.getLogger('epc.server')
@@ -15,18 +16,6 @@ def setuplogfile(logger=_logger, filename='python-epc.log'):
     ch = logging.FileHandler(filename=filename, mode='w')
     ch.setLevel(logging.DEBUG)
     logger.addHandler(ch)
-
-
-def encode_string(string):
-    data = string.encode('utf-8')
-    datalen = '{0:06x}'.format(len(data) + 1).encode()
-    return _JOIN_BYTES([datalen, data, _NEWLINE_BYTE])
-_JOIN_BYTES = ''.encode().join
-_NEWLINE_BYTE = '\n'.encode()
-
-
-def encode_object(obj, **kwds):
-    return encode_string(dumps(obj, **kwds))
 
 
 class BaseRemoteError(Exception):
