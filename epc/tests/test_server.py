@@ -8,9 +8,10 @@ from contextlib import contextmanager
 
 from sexpdata import Symbol, loads
 
-from ..server import ThreadingEPCServer, encode_string, encode_object, \
+from ..server import ThreadingEPCServer, \
     ReturnError, EPCError, ReturnErrorCallerUnknown, EPCErrorCallerUnknown, \
     CallerUnknown
+from ..core import encode_string, encode_object
 from ..py3compat import PY3, utf8, Queue
 
 
