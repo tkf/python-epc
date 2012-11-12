@@ -32,11 +32,17 @@ class TestClient(unittest.TestCase):
     def set_next_reply(self, *args):
         self.fsock.append(encode_message(*args))
 
+    def sent_message(self, i=0):
+        (name, uid, rest) = decode_message(self.fsock.sent_message[0][6:])
+        if name == 'call':
+            rest[0] = rest[0].value()
+        return [name, uid] + rest
+
     def test_call_return(self):
         uid = 1
         returned = 'some value'
         self.set_next_reply('return', uid, returned)
         got = self.client.call('dummy', [1, 2, 3])
         self.assertEqual(got, returned)
-        sent = decode_message(self.fsock.sent_message[0])
+        sent = self.sent_message()
         self.assertEqual(sent, ['call', uid, 'dummy', [1, 2, 3]])
