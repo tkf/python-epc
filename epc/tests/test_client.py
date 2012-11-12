@@ -40,13 +40,16 @@ class TestClient(BaseTestCase):
             rest[0] = rest[0].value()
         return [name, uid] + rest
 
+    def check_sent_message(self, name, uid, args):
+        sent = self.sent_message()
+        self.assertEqual(sent, [name, uid] + list(args))
+
     def check_return(self, desired_return, name, *args):
         uid = 1
         self.set_next_reply('return', uid, desired_return)
         got = getattr(self.client, name)(*args)
         self.assertEqual(got, desired_return)
-        sent = self.sent_message()
-        self.assertEqual(sent, [name, uid] + list(args))
+        self.check_sent_message(name, uid, args)
 
     def test_call_return(self):
         self.check_return('some value', 'call', 'dummy', [1, 2, 3])
@@ -66,8 +69,7 @@ class TestClient(BaseTestCase):
         except Exception as got:
             self.assertIsInstance(got, type(error))
             self.assertEqual(got.args, error.args)
-        sent = self.sent_message()
-        self.assertEqual(sent, [name, uid] + list(args))
+        self.check_sent_message(name, uid, args)
 
     def test_call_return_error(self):
         self.check_return_error('return-error', 'call', 'dummy', [1, 2, 3])
