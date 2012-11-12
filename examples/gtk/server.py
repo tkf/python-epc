@@ -83,7 +83,8 @@ class SampleGTKServer(object):
 
     def clicked(self, widget, data=None):
         handler = self.server.clients[0]
-        handler.call('message', ["clicked!"], lambda _: None)
+        message = "Button '{0}' is clicked!".format(self.button.get_label())
+        handler.call('message', [message])
 
     def destroy(self, widget, data=None):
         self.server.shutdown()
