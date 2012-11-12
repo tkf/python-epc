@@ -3,6 +3,7 @@ import itertools
 from sexpdata import Symbol
 
 from .core import itermessage, encode_message, unpack_message
+from .utils import ThreadedIterator
 
 
 class SocketReader(object):
@@ -35,7 +36,7 @@ class EPCClient(object):
         else:
             self.socket = socket_or_address
         self.reader = SocketReader(self.socket)
-        self._messages = itermessage(self.reader.read)
+        self._messages = ThreadedIterator(itermessage(self.reader.read))
 
     def register_function(self, function, name=None):
         raise NotImplementedError
