@@ -12,6 +12,7 @@ class FakeSocket(object):
     def __init__(self):
         self._buffer = io.BytesIO()
         self.sent_message = []
+        self._alive = True
 
     def append(self, byte):
         pos = self._buffer.tell()
@@ -19,10 +20,15 @@ class FakeSocket(object):
         self._buffer.seek(pos)
 
     def recv(self, bufsize):
+        if not self._alive:
+            raise StopIteration  # hack to stop thread
         return self._buffer.read(bufsize)
 
     def sendall(self, string):
         self.sent_message.append(string)
+
+    def close(self):
+        self._alive = False
 
 
 class TestClient(BaseTestCase):
@@ -30,6 +36,9 @@ class TestClient(BaseTestCase):
     def setUp(self):
         self.fsock = FakeSocket()
         self.client = EPCClient(self.fsock)
+
+    def tearDown(self):
+        self.client.socket.close()
 
     def set_next_reply(self, *args):
         self.fsock.append(encode_message(*args))
