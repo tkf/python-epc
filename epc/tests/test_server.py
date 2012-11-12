@@ -4,12 +4,27 @@ import io
 import socket
 import threading
 import unittest
+from contextlib import contextmanager
 
 from sexpdata import Symbol, loads
 
 from ..server import ThreadingEPCServer, encode_string, encode_object, \
-    ReturnError, EPCError
+    ReturnError, EPCError, ReturnErrorCallerUnknown, EPCErrorCallerUnknown, \
+    CallerUnknown
 from ..py3compat import PY3, utf8, Queue
+
+
+@contextmanager
+def mockedattr(object, name, replace):
+    """
+    Mock `object.name` attribute using `replace`.
+    """
+    original = getattr(object, name)
+    try:
+        setattr(object, name, replace)
+        yield
+    finally:
+        setattr(object, name, original)
 
 
 class BaseEPCServerTestCase(unittest.TestCase):
@@ -52,6 +67,10 @@ class BaseEPCServerTestCase(unittest.TestCase):
         self.client_send('(call 1 echo (55))')
         result = self.client.recv(1024)
         self.assertEqual(encode_string('(return 1 (55))'), result)
+
+    if not hasattr(unittest.TestCase, 'assertIsInstance'):
+        def assertIsInstance(self, obj, cls, msg=None):
+            self.assertTrue(isinstance(obj, cls), msg),
 
 
 class TestEPCServerRequestHandling(BaseEPCServerTestCase):
@@ -104,6 +123,31 @@ class TestEPCServerRequestHandling(BaseEPCServerTestCase):
         self.assertEqual(reply[0].value(), Symbol('epc-error').value())
         self.assertEqual(reply[1], [])  # uid
         assert 'Not enough closing brackets.' in reply[2]
+
+    def check_caller_unkown(self, message, eclass, eargs):
+        self.check_echo()  # to establish connection to client
+        called_with = Queue.Queue()
+        with mockedattr(self.server.clients[0],
+                        'handle_error', called_with.put):
+            self.client_send(message)
+            error = called_with.get(True, 1)
+        self.assertIsInstance(error, eclass)
+        self.assertEqual(error.args, eargs)
+
+    def test_return_caller_unkown(self):
+        self.check_caller_unkown(
+            '(return 0 ("some" "value"))',  # uid=0 is always unkown
+            CallerUnknown, (['some', 'value'],))
+
+    def test_return_error_caller_unkown(self):
+        self.check_caller_unkown(
+            '(return-error nil "message")',
+            ReturnErrorCallerUnknown, ('message',))
+
+    def test_epc_error_caller_unkown(self):
+        self.check_caller_unkown(
+            '(epc-error nil "message")',
+            EPCErrorCallerUnknown, ('message',))
 
     def test_print_port(self):
         if PY3:

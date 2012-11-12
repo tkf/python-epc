@@ -298,12 +298,14 @@ class EPCCaller:           # SocketServer.TCPServer is old style class
         self._set_callbacks(uid, callback, errback)
 
     def handle_return(self, uid, reply):
+        if not (isinstance(uid, int) and uid in self.callbacks):
+            raise CallerUnknown(reply)
         (callback, _) = self._pop_callbacks(uid)
         if callback is not None:
             callback(reply)
 
     def _handle_error_reply(self, uid, reply, eclass, notfound):
-        if uid not in self.errbacks:
+        if not (isinstance(uid, int) and uid in self.errbacks):
             raise notfound(reply)
         (_, errback) = self._pop_callbacks(uid)
         error = eclass(reply)
