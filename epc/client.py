@@ -2,7 +2,7 @@ import itertools
 
 from sexpdata import Symbol
 
-from .core import itermessage, encode_message, decode_message
+from .core import itermessage, encode_message, unpack_message
 
 
 class SocketReader(object):
@@ -45,7 +45,7 @@ class EPCClient(object):
     def _request(self, name, *args):
         uid = self.get_uid()
         self.socket.sendall(encode_message(name, uid, *args))
-        (name, ruid, rest) = decode_message(next(self._messages))
+        (name, ruid, rest) = unpack_message(next(self._messages))
         pyname = name.replace('-', '_')
         assert uid == ruid  # FIXME: support non-serial execution!
         return getattr(self, '_handle_{0}'.format(pyname))(uid, *rest)

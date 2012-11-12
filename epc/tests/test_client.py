@@ -2,7 +2,7 @@ import unittest
 import io
 
 from ..client import EPCClient
-from ..core import encode_message, decode_message
+from ..core import encode_message, unpack_message
 
 
 class FakeSocket(object):
@@ -33,7 +33,7 @@ class TestClient(unittest.TestCase):
         self.fsock.append(encode_message(*args))
 
     def sent_message(self, i=0):
-        (name, uid, rest) = decode_message(self.fsock.sent_message[0][6:])
+        (name, uid, rest) = unpack_message(self.fsock.sent_message[0][6:])
         if name == 'call':
             rest[0] = rest[0].value()
         return [name, uid] + rest

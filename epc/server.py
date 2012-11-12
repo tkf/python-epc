@@ -6,7 +6,7 @@ from sexpdata import Symbol, String
 
 from .py3compat import SocketServer
 from .utils import autolog
-from .core import encode_message, decode_message
+from .core import encode_message, unpack_message
 
 
 _logger = logging.getLogger('epc.server')
@@ -109,7 +109,7 @@ class EPCHandler(SocketServer.StreamRequestHandler):
     def _handle(self, sexp):
         uid = undefined = []  # default: nil
         try:
-            (name, uid, args) = decode_message(sexp)
+            (name, uid, args) = unpack_message(sexp)
             pyname = name.replace('-', '_')
             handler = getattr(self, '_handle_{0}'.format(pyname))
             self._send(*handler(uid, *args))

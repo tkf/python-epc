@@ -17,7 +17,7 @@ def encode_message(name, *args, **kwds):
     return encode_object([Symbol(name)] + list(args), **kwds)
 
 
-def decode_message(bytes):
+def unpack_message(bytes):
     data = loads(bytes.decode('utf-8'))
     return (data[0].value(), data[1], data[2:])
 
