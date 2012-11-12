@@ -17,7 +17,7 @@ class SocketReader(object):
             self._buffer.extend(self._sock.recv(self._recvsize))
         value = self._buffer[:size]
         self._buffer = self._buffer[size:]
-        return str(value)
+        return bytes(value)
 
 
 class EPCClient(object):
