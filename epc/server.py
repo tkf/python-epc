@@ -341,8 +341,8 @@ class EPCServer(SocketServer.TCPServer, EPCClientManager,
     >>> server.print_port()                                #doctest: +SKIP
     >>> server.serve_forever()                             #doctest: +SKIP
 
-    To call client's method, use :attr:`clients <EPCClientManager.clients>`,
-    to get client handler and use its :meth:`EPCHandler.call` and
+    To call client's method, use :attr:`clients <EPCClientManager.clients>`
+    attribute to get client handler and use its :meth:`EPCHandler.call` and
     :meth:`EPCHandler.methods` methods to communicate with connected client.
 
     >>> handler = server.clients[0]                        #doctest: +SKIP
