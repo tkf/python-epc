@@ -15,7 +15,10 @@ class SocketReader(object):
 
     def read(self, size):
         while len(self._buffer) < size:
-            self._buffer.extend(self._sock.recv(self._recvsize))
+            got = self._sock.recv(self._recvsize)
+            if not got:
+                return ''
+            self._buffer.extend(got)
         value = self._buffer[:size]
         self._buffer = self._buffer[size:]
         return bytes(value)

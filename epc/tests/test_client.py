@@ -20,9 +20,12 @@ class FakeSocket(object):
         self._buffer.seek(pos)
 
     def recv(self, bufsize):
-        if not self._alive:
-            raise StopIteration  # hack to stop thread
-        return self._buffer.read(bufsize)
+        while True:
+            if not self._alive:
+                return ''
+            got = self._buffer.read(bufsize)
+            if got:
+                return got
 
     def sendall(self, string):
         self.sent_message.append(string)
