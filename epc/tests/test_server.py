@@ -119,6 +119,26 @@ class TestEPCServerRequestHandling(BaseEPCServerTestCase):
         self.assertEqual(reply[1], [])  # uid
         assert 'Not enough closing brackets.' in reply[2]
 
+    def check_caller_unkown(self, name, uid, message, eclass, eargs):
+        self.check_echo()  # to establish connection to client
+        called_with = Queue.Queue()
+        with mockedattr(self.server.clients[0],
+                        'handle_error', called_with.put):
+            self.client_send('({0} {1} {2})'.format(name, uid, message))
+            error = called_with.get(True, 1)
+        assert isinstance(error, eclass)
+        self.assertEqual(error.args, eargs)
+
+    def test_return_error_caller_unkown(self):
+        self.check_caller_unkown(
+            'return-error', 'nil', '"message"',
+            ReturnError, ('message',))
+
+    def test_epc_error_caller_unkown(self):
+        self.check_caller_unkown(
+            'epc-error', 'nil', '"message"',
+            EPCError, ('message',))
+
     def test_print_port(self):
         if PY3:
             stream = io.StringIO()
