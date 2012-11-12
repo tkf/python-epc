@@ -1,4 +1,4 @@
-from sexpdata import dumps, Symbol
+from sexpdata import loads, dumps, Symbol
 
 
 def encode_string(string):
@@ -15,6 +15,11 @@ def encode_object(obj, **kwds):
 
 def encode_message(name, *args, **kwds):
     return encode_object([Symbol(name)] + args, **kwds)
+
+
+def decode_message(bytes):
+    data = loads(bytes.decode('utf-8'))
+    return (data[0].value(), data[1], data[2:])
 
 
 def itermessage(read):
