@@ -1,6 +1,8 @@
 import unittest
 import io
 
+from sexpdata import Symbol
+
 from ..client import EPCClient
 from ..core import encode_message, unpack_message
 
@@ -46,3 +48,12 @@ class TestClient(unittest.TestCase):
         self.assertEqual(got, returned)
         sent = self.sent_message()
         self.assertEqual(sent, ['call', uid, 'dummy', [1, 2, 3]])
+
+    def test_methods_return(self):
+        uid = 1
+        returned = [[Symbol('dummy'), [], "document"]]
+        self.set_next_reply('return', uid, returned)
+        got = self.client.methods()
+        self.assertEqual(got, returned)
+        sent = self.sent_message()
+        self.assertEqual(sent, ['methods', uid])
