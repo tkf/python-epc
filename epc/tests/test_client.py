@@ -1,10 +1,10 @@
-import unittest
 import io
 
 from sexpdata import Symbol
 
 from ..client import EPCClient
 from ..core import encode_message, unpack_message
+from .utils import BaseTestCase
 
 
 class FakeSocket(object):
@@ -25,7 +25,7 @@ class FakeSocket(object):
         self.sent_message.append(string)
 
 
-class TestClient(unittest.TestCase):
+class TestClient(BaseTestCase):
 
     def setUp(self):
         self.fsock = FakeSocket()
