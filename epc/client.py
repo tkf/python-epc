@@ -22,7 +22,13 @@ class SocketReader(object):
 
 class EPCClient(object):
 
-    def __init__(self, socket_or_address):
+    def __init__(self, socket_or_address=None):
+        counter = itertools.count(1)
+        self.get_uid = lambda: next(counter)
+        if socket_or_address is not None:
+            self.connect(socket_or_address)
+
+    def connect(self, socket_or_address):
         if isinstance(socket_or_address, tuple):
             import socket
             self.socket = socket.create_connection(socket_or_address)
@@ -30,8 +36,6 @@ class EPCClient(object):
             self.socket = socket_or_address
         self.reader = SocketReader(self.socket)
         self._messages = itermessage(self.reader.read)
-        counter = itertools.count(1)
-        self.get_uid = lambda: next(counter)
 
     def register_function(self, function, name=None):
         raise NotImplementedError
