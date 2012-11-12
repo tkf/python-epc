@@ -53,3 +53,30 @@ class TestClient(BaseTestCase):
 
     def test_methods_return(self):
         self.check_return([[Symbol('dummy'), [], "document"]], 'methods')
+
+    def check_return_error(self, reply_name, name, *args):
+        uid = 1
+        reply = 'error value'
+        error = ValueError(reply)
+        self.set_next_reply(reply_name, uid, reply)
+        try:
+            getattr(self.client, name)(*args)
+            assert False, 'self.client.{0}({1}) should raise an error' \
+                .format(name, args)
+        except Exception as got:
+            self.assertIsInstance(got, type(error))
+            self.assertEqual(got.args, error.args)
+        sent = self.sent_message()
+        self.assertEqual(sent, [name, uid] + list(args))
+
+    def test_call_return_error(self):
+        self.check_return_error('return-error', 'call', 'dummy', [1, 2, 3])
+
+    def test_call_epc_error(self):
+        self.check_return_error('epc-error', 'call', 'dummy', [1, 2, 3])
+
+    def test_methods_return_error(self):
+        self.check_return_error('return-error', 'methods')
+
+    def test_methods_epc_error(self):
+        self.check_return_error('epc-error', 'methods')
