@@ -5,6 +5,11 @@ An example of using GTK from Emacs.
 
 * Manipulate GTK window from Emacs:
 
+  Python server exposes remote methods called `destroy` and
+  `set_button_label`.  You can call these methods from Emacs by
+  ``M-x pyepc-sample-gtk-destroy`` and
+  ``M-x pyepc-sample-gtk-set-button-label``.
+
   - `destroy` (`pyepc-sample-gtk-destroy`):
      Close GTK window from Emacs command
 
@@ -13,7 +18,10 @@ An example of using GTK from Emacs.
 
 * Manipulate Emacs from GTK GUI.
 
-  - `message`: Notify when GUI button is clicked.
+  Emacs client exposes a remote method called `message`.
+
+  - `message`:
+    Emacs prints message in minibuffer when GUI button is clicked.
 
 """
 
@@ -43,7 +51,7 @@ class SampleGTKServer(object):
         # Quit when window is closed
         self.window.connect("destroy", self.destroy)
 
-        # Creates a new button with the label "Hello World".
+        # Creates a new button
         self.button = gtk.Button("Push me!")
         self.button.connect("clicked", self.clicked, None)
 
