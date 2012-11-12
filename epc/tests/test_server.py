@@ -174,7 +174,7 @@ class TestEPCServerCallClient(BaseEPCServerTestCase):
 
     def check_call_client_dummy_method(self):
         (call, uid, meth, args) = self.receive_message()
-        assert isinstance(uid, int)
+        self.assertIsInstance(uid, int)
         self.assertEqual([call, uid, meth, args],
                          [Symbol('call'), uid, Symbol('dummy'), [55]])
         return uid
@@ -202,7 +202,7 @@ class TestEPCServerCallClient(BaseEPCServerTestCase):
         uid = self.check_call_client_dummy_method()
         self.client_send_error(ename, uid, message)
         reply = self.errback_called_with.get(True, 1)
-        assert isinstance(reply, eclass)
+        self.assertIsInstance(reply, eclass)
         self.assertEqual(reply.args, (message,))
 
     def test_call_client_return_error(self):
