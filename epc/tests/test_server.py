@@ -67,6 +67,10 @@ class BaseEPCServerTestCase(unittest.TestCase):
         result = self.client.recv(1024)
         self.assertEqual(encode_string('(return 1 (55))'), result)
 
+    if not hasattr(unittest.TestCase, 'assertIsInstance'):
+        def assertIsInstance(self, obj, cls, msg=None):
+            self.assertTrue(isinstance(obj, cls), msg),
+
 
 class TestEPCServerRequestHandling(BaseEPCServerTestCase):
 
@@ -126,7 +130,7 @@ class TestEPCServerRequestHandling(BaseEPCServerTestCase):
                         'handle_error', called_with.put):
             self.client_send(message)
             error = called_with.get(True, 1)
-        assert isinstance(error, eclass)
+        self.assertIsInstance(error, eclass)
         self.assertEqual(error.args, eargs)
 
     def test_return_error_caller_unkown(self):
