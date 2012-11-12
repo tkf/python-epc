@@ -9,7 +9,8 @@ from contextlib import contextmanager
 from sexpdata import Symbol, loads
 
 from ..server import ThreadingEPCServer, encode_string, encode_object, \
-    ReturnError, EPCError, ReturnErrorCallerUnknown, EPCErrorCallerUnknown
+    ReturnError, EPCError, ReturnErrorCallerUnknown, EPCErrorCallerUnknown, \
+    CallerUnknown
 from ..py3compat import PY3, utf8, Queue
 
 
@@ -132,6 +133,11 @@ class TestEPCServerRequestHandling(BaseEPCServerTestCase):
             error = called_with.get(True, 1)
         self.assertIsInstance(error, eclass)
         self.assertEqual(error.args, eargs)
+
+    def test_return_caller_unkown(self):
+        self.check_caller_unkown(
+            '(return 0 ("some" "value"))',  # uid=0 is always unkown
+            CallerUnknown, (['some', 'value'],))
 
     def test_return_error_caller_unkown(self):
         self.check_caller_unkown(
