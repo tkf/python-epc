@@ -14,7 +14,7 @@ def encode_object(obj, **kwds):
 
 
 def encode_message(name, *args, **kwds):
-    return encode_object([Symbol(name)] + args, **kwds)
+    return encode_object([Symbol(name)] + list(args), **kwds)
 
 
 def decode_message(bytes):
