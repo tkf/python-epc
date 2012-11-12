@@ -13,6 +13,10 @@ def encode_object(obj, **kwds):
     return encode_string(dumps(obj, **kwds))
 
 
+def encode_message(name, *args, **kwds):
+    return encode_object([Symbol(name)] + args, **kwds)
+
+
 def itermessage(read):
     while True:
         head = read(6)
