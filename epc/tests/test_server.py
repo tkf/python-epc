@@ -34,8 +34,6 @@ class BaseEPCServerTestCase(unittest.TestCase):
         self.server = ThreadingEPCServer(('localhost', 0))
         self.server_thread = threading.Thread(target=self.server.serve_forever)
         self.server_thread.allow_reuse_address = True
-        self.client = socket.create_connection(self.server.server_address)
-        self.client.settimeout(0.1)
         self.server_thread.start()
 
         def echo(*a):
@@ -49,6 +47,9 @@ class BaseEPCServerTestCase(unittest.TestCase):
 
         self.server.register_function(echo)
         self.server.register_function(bad_method)
+
+        self.client = socket.create_connection(self.server.server_address)
+        self.client.settimeout(0.1)
 
     def tearDown(self):
         self.client.close()
