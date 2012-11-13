@@ -4,17 +4,23 @@ from sexpdata import Symbol
 
 from ..client import EPCClient
 from ..core import encode_message, unpack_message
+from ..py3compat import Queue
 from .utils import BaseTestCase
 
 
 class FakeSocket(object):
 
     def __init__(self):
+        self._queue = Queue.Queue()
         self._buffer = io.BytesIO()
         self.sent_message = []
         self._alive = True
 
     def append(self, byte):
+        self._queue.put(byte)
+
+    def _pull(self):
+        byte = self._queue.get()
         pos = self._buffer.tell()
         self._buffer.write(byte)
         self._buffer.seek(pos)
@@ -26,6 +32,9 @@ class FakeSocket(object):
             got = self._buffer.read(bufsize)
             if got:
                 return got
+            # Do not go to the next loop until some byte is appended
+            # to the queue:
+            self._pull()
 
     def sendall(self, string):
         self.sent_message.append(string)
