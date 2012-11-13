@@ -2,10 +2,11 @@ import sys
 import logging
 import itertools
 
-from sexpdata import loads, dumps, Symbol, String
+from sexpdata import Symbol, String
 
 from .py3compat import SocketServer
 from .utils import autolog
+from .core import encode_message, unpack_message
 
 
 _logger = logging.getLogger('epc.server')
@@ -15,18 +16,6 @@ def setuplogfile(logger=_logger, filename='python-epc.log'):
     ch = logging.FileHandler(filename=filename, mode='w')
     ch.setLevel(logging.DEBUG)
     logger.addHandler(ch)
-
-
-def encode_string(string):
-    data = string.encode('utf-8')
-    datalen = '{0:06x}'.format(len(data) + 1).encode()
-    return _JOIN_BYTES([datalen, data, _NEWLINE_BYTE])
-_JOIN_BYTES = ''.encode().join
-_NEWLINE_BYTE = '\n'.encode()
-
-
-def encode_object(obj, **kwds):
-    return encode_string(dumps(obj, **kwds))
 
 
 class BaseRemoteError(Exception):
@@ -107,8 +96,8 @@ class EPCHandler(SocketServer.StreamRequestHandler):
             yield data
 
     @autolog('debug')
-    def _send(self, obj):
-        string = encode_object(obj)
+    def _send(self, *args):
+        string = encode_message(*args)
         self.wfile.write(string)
 
     @autolog('debug')
@@ -120,10 +109,10 @@ class EPCHandler(SocketServer.StreamRequestHandler):
     def _handle(self, sexp):
         uid = undefined = []  # default: nil
         try:
-            data = loads(sexp.decode('utf-8'))
-            (name, uid, args) = (data[0].value(), data[1], data[2:])
+            (name, uid, args) = unpack_message(sexp)
             pyname = name.replace('-', '_')
-            self._send(getattr(self, '_handle_{0}'.format(pyname))(uid, *args))
+            handler = getattr(self, '_handle_{0}'.format(pyname))
+            self._send(*handler(uid, *args))
         except Exception as err:
             if self.handle_error(err):
                 return
@@ -133,7 +122,7 @@ class EPCHandler(SocketServer.StreamRequestHandler):
             if isinstance(err, BaseRemoteError):  # do not send error back
                 return
             name = 'epc-error' if uid is undefined else 'return-error'
-            self._send([Symbol(name), uid, String(repr(err))])
+            self._send(name, uid, repr(err))
 
     @autolog('debug')
     def _handle_call(self, uid, meth, args):
@@ -141,13 +130,13 @@ class EPCHandler(SocketServer.StreamRequestHandler):
         name = meth.value()
         if name in self.server.funcs:
             func = self.server.funcs[name]
-            return [Symbol('return'), uid, func(*args)]
+            return ['return', uid, func(*args)]
         else:
-            return [Symbol('epc-error'), uid,
+            return ['epc-error', uid,
                     "EPC-ERROR: No such method : {0}".format(name)]
 
     def _handle_methods(self, uid):
-        return [Symbol('return'), uid, [
+        return ['return', uid, [
             (Symbol(name), [], String(func.__doc__ or ""))
             # FIXNE: implement arg-specs
             for (name, func)
@@ -289,12 +278,12 @@ class EPCCaller:           # SocketServer.TCPServer is old style class
 
     def call(self, handler, name, args=[], callback=None, errback=None):
         uid = self.get_uid()
-        handler._send([Symbol('call'), uid, Symbol(name), args])
+        handler._send('call', uid, Symbol(name), args)
         self._set_callbacks(uid, callback, errback)
 
     def methods(self, handler, callback=None, errback=None):
         uid = self.get_uid()
-        handler._send([Symbol('methods'), uid])
+        handler._send('methods', uid)
         self._set_callbacks(uid, callback, errback)
 
     def handle_return(self, uid, reply):

@@ -3,31 +3,18 @@
 import io
 import socket
 import threading
-import unittest
-from contextlib import contextmanager
 
 from sexpdata import Symbol, loads
 
-from ..server import ThreadingEPCServer, encode_string, encode_object, \
+from ..server import ThreadingEPCServer, \
     ReturnError, EPCError, ReturnErrorCallerUnknown, EPCErrorCallerUnknown, \
     CallerUnknown
+from ..core import encode_string, encode_object
 from ..py3compat import PY3, utf8, Queue
+from .utils import mockedattr, BaseTestCase
 
 
-@contextmanager
-def mockedattr(object, name, replace):
-    """
-    Mock `object.name` attribute using `replace`.
-    """
-    original = getattr(object, name)
-    try:
-        setattr(object, name, replace)
-        yield
-    finally:
-        setattr(object, name, original)
-
-
-class BaseEPCServerTestCase(unittest.TestCase):
+class BaseEPCServerTestCase(BaseTestCase):
 
     def setUp(self):
         # See: http://stackoverflow.com/questions/7720953
@@ -68,10 +55,6 @@ class BaseEPCServerTestCase(unittest.TestCase):
         self.client_send('(call 1 echo (55))')
         result = self.client.recv(1024)
         self.assertEqual(encode_string('(return 1 (55))'), result)
-
-    if not hasattr(unittest.TestCase, 'assertIsInstance'):
-        def assertIsInstance(self, obj, cls, msg=None):
-            self.assertTrue(isinstance(obj, cls), msg),
 
 
 class TestEPCServerRequestHandling(BaseEPCServerTestCase):
