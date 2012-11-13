@@ -52,6 +52,9 @@ class ThreadedIterator(object):
         for result in self._original_iterable:
             self.queue.put(result)
 
+    def __iter__(self):
+        return self
+
     def __next__(self):
         return self.queue.get()
     next = __next__  # for PY2
