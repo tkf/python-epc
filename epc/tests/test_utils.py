@@ -1,4 +1,4 @@
-from ..utils import ThreadedIterator
+from ..utils import ThreadedIterator, LockingDict
 
 from .utils import BaseTestCase
 
@@ -17,3 +17,24 @@ class TestThreadedIterator(BaseTestCase):
 
     def test_range_7(self):
         self.check_identity(range(7))
+
+
+class TestLockingDict(BaseTestCase):
+
+    def setUp(self):
+        self.ld = LockingDict()
+
+    def check_set_items(self, items):
+        for (k, v) in items:
+            self.ld[k] = v
+        self.assertEqual(dict(**self.ld), dict(items))
+
+    def test_simple_set_items(self):
+        self.check_set_items(dict(a=1, b=2, c=3).items())
+
+    def test_simple_del_items(self):
+        self.test_simple_set_items()
+        ld = self.ld
+        del ld['a']
+        del ld['b']
+        self.assertEqual(dict(**self.ld), dict(c=3))
