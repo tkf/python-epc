@@ -46,15 +46,20 @@ class ThreadedIterator(object):
         self.queue = Queue.Queue()
         self.thread = threading.Thread(target=self._target)
         self.thread.daemon = True
+        self._sentinel = object()
         self.thread.start()
 
     def _target(self):
         for result in self._original_iterable:
             self.queue.put(result)
+        self.queue.put(self._sentinel)
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        return self.queue.get()
+        got = self.queue.get()
+        if got is self._sentinel:
+            raise StopIteration
+        return got
     next = __next__  # for PY2
