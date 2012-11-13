@@ -5,7 +5,8 @@ from .utils import BaseTestCase
 
 class TestThreadedIterator(BaseTestCase):
 
-    def check_identity(self, lst):
+    def check_identity(self, iterable):
+        lst = list(iterable)
         self.assertEqual(list(ThreadedIterator(lst)), lst)
 
     def test_empty(self):
