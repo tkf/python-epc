@@ -63,3 +63,18 @@ class ThreadedIterator(object):
             raise StopIteration
         return got
     next = __next__  # for PY2
+
+
+class LockingDict(dict):
+
+    def __init__(self, *args, **kwds):
+        super(LockingDict, self).__init__(*args, **kwds)
+        self._lock = threading.Lock()
+
+    def __setitem__(self, key, value):
+        with self._lock:
+            super(LockingDict, self).__setitem__(key, value)
+
+    def __delitem__(self, key):
+        with self._lock:
+            super(LockingDict, self).__delitem__(key)
