@@ -263,40 +263,34 @@ class EPCDispacher:        # SocketServer.TCPServer is old style class
 
 class EPCCaller:           # SocketServer.TCPServer is old style class
 
+    # FIXME: do not use this class as a mix-in (?)
+
     def __init__(self):
         self.callbacks = {}
-        self.errbacks = {}
         counter = itertools.count(1)
         self.get_uid = lambda: next(counter)
-
-    def _set_callbacks(self, uid, callback, errback):
-        self.callbacks[uid] = callback
-        self.errbacks[uid] = errback
-
-    def _pop_callbacks(self, uid):
-        return (self.callbacks.pop(uid), self.errbacks.pop(uid))
 
     def call(self, handler, name, args=[], callback=None, errback=None):
         uid = self.get_uid()
         handler._send('call', uid, Symbol(name), args)
-        self._set_callbacks(uid, callback, errback)
+        self.callbacks[uid] = (callback, errback)
 
     def methods(self, handler, callback=None, errback=None):
         uid = self.get_uid()
         handler._send('methods', uid)
-        self._set_callbacks(uid, callback, errback)
+        self.callbacks[uid] = (callback, errback)
 
     def handle_return(self, uid, reply):
         if not (isinstance(uid, int) and uid in self.callbacks):
             raise CallerUnknown(reply)
-        (callback, _) = self._pop_callbacks(uid)
+        (callback, _) = self.callbacks.pop(uid)
         if callback is not None:
             callback(reply)
 
     def _handle_error_reply(self, uid, reply, eclass, notfound):
-        if not (isinstance(uid, int) and uid in self.errbacks):
+        if not (isinstance(uid, int) and uid in self.callbacks):
             raise notfound(reply)
-        (_, errback) = self._pop_callbacks(uid)
+        (_, errback) = self.callbacks.pop(uid)
         error = eclass(reply)
         if errback is None:
             raise error
