@@ -18,7 +18,7 @@ class FakeSocket(object):
     def __init__(self):
         self._queue = Queue.Queue()
         self._buffer = io.BytesIO()
-        self.sent_message = []
+        self.sent_message = Queue.Queue()
         self._alive = True
 
     def makefile(self, mode, *_):
@@ -51,7 +51,7 @@ class FakeSocket(object):
             self._pull()
 
     def sendall(self, string):
-        self.sent_message.append(string)
+        self.sent_message.put(string)
 
     def close(self):
         self._alive = False
@@ -77,8 +77,9 @@ class TestClient(BaseTestCase):
         self.fsock.append(self.next_reply.pop(0))  # reply comes after call!
         return bc.result(timeout=1)
 
-    def sent_message(self, i=0):
-        (name, uid, rest) = unpack_message(self.fsock.sent_message[0][6:])
+    def sent_message(self):
+        raw = self.fsock.sent_message.get(timeout=1)
+        (name, uid, rest) = unpack_message(raw[6:])
         if name == 'call':
             rest[0] = rest[0].value()
         return [name, uid] + rest
