@@ -2,6 +2,7 @@ import threading
 import itertools
 
 from .py3compat import Queue
+from .utils import ThreadedIterator
 from .core import BlockingCallback
 from .server import EPCHandler, EPCCore
 
@@ -24,6 +25,10 @@ class EPCClientHandler(EPCHandler):
 
     def wait_until_ready(self):
         self._ready.get()
+
+    def _recv(self):
+        self._recv_iter = ThreadedIterator(EPCHandler._recv(self))
+        return self._recv_iter
 
 
 class EPCClient(EPCCore):
@@ -52,6 +57,9 @@ class EPCClient(EPCCore):
         self.handler_thread = threading.Thread(target=self.handler.start)
         self.handler_thread.start()
         self.handler.wait_until_ready()
+
+    def close(self):
+        self.handler._recv_iter.stop()
 
     def _ignore(*_):
         """"Do nothing method for `EPCHandler`."""

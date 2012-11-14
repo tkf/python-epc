@@ -52,6 +52,9 @@ class ThreadedIterator(object):
     def _target(self):
         for result in self._original_iterable:
             self.queue.put(result)
+        self.stop()
+
+    def stop(self):
         self.queue.put(self._sentinel)
 
     def __iter__(self):
