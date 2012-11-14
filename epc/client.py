@@ -2,6 +2,7 @@ import threading
 import itertools
 
 from .py3compat import Queue
+from .core import BlockingCallback
 from .server import EPCHandler, EPCCore
 
 
@@ -59,15 +60,9 @@ class EPCClient(EPCCore):
 
     @staticmethod
     def _blocking_request(call, timeout, *args):
-        q = Queue.Queue()
-        call(*args,
-             callback=lambda x: q.put(('return', x)),
-             errback=lambda x: q.put(('error', x)))
-        (rtype, reply) = q.get(timeout=timeout)
-        if rtype == 'return':
-            return reply
-        else:
-            raise reply
+        bc = BlockingCallback()
+        call(*args, **bc.cbs)
+        return bc.result(timeout=timeout)
 
     def call_block(self, name, args, timeout=None):
         return self._blocking_request(self.call, timeout, name, args)

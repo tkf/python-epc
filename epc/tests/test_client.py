@@ -4,7 +4,7 @@ from sexpdata import Symbol
 
 from ..client import EPCClient
 from ..server import ReturnError, EPCError
-from ..core import encode_message, unpack_message
+from ..core import encode_message, unpack_message, BlockingCallback
 from ..py3compat import Queue
 from .utils import BaseTestCase
 
@@ -62,16 +62,20 @@ class TestClient(BaseTestCase):
 
     def setUp(self):
         self.fsock = FakeSocket()
+        self.next_reply = []
         self.client = EPCClient(self.fsock)
 
     def tearDown(self):
         self.client.socket.close()
 
     def set_next_reply(self, *args):
-        self.fsock.append(encode_message(*args))
+        self.next_reply.append(encode_message(*args))
 
     def request(self, name, *args):
-        return getattr(self.client, name + '_block')(*args, timeout=1)
+        bc = BlockingCallback()
+        getattr(self.client, name)(*args, **bc.cbs)
+        self.fsock.append(self.next_reply.pop(0))  # reply comes after call!
+        return bc.result(timeout=1)
 
     def sent_message(self, i=0):
         (name, uid, rest) = unpack_message(self.fsock.sent_message[0][6:])
