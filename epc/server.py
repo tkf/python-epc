@@ -5,7 +5,7 @@ import itertools
 from sexpdata import Symbol, String
 
 from .py3compat import SocketServer
-from .utils import autolog
+from .utils import autolog, LockingDict
 from .core import encode_message, unpack_message
 
 
@@ -72,6 +72,7 @@ class EPCHandler(SocketServer.StreamRequestHandler):
     def setup(self):
         SocketServer.StreamRequestHandler.setup(self)
         self.server.add_client(self)
+        self.callmanager = EPCCallManager()
 
     @autolog('debug')
     def finish(self):
@@ -143,13 +144,13 @@ class EPCHandler(SocketServer.StreamRequestHandler):
             in self.server.funcs.items()]]
 
     def _handle_return(self, uid, reply):
-        self.server.handle_return(uid, reply)
+        self.callmanager.handle_return(uid, reply)
 
     def _handle_return_error(self, uid, reply):
-        self.server.handle_return_error(uid, reply)
+        self.callmanager.handle_return_error(uid, reply)
 
     def _handle_epc_error(self, uid, reply):
-        self.server.handle_epc_error(uid, reply)
+        self.callmanager.handle_epc_error(uid, reply)
 
     def handle_error(self, err):
         """
@@ -181,7 +182,7 @@ class EPCHandler(SocketServer.StreamRequestHandler):
                         of :class:`ReturnError` or :class:`EPCError`.
 
         """
-        self.server.call(self, name, *args, **kwds)
+        self.callmanager.call(self, name, *args, **kwds)
 
     def methods(self, *args, **kwds):
         """
@@ -191,7 +192,7 @@ class EPCHandler(SocketServer.StreamRequestHandler):
         this function too.
 
         """
-        self.server.methods(self, *args, **kwds)
+        self.callmanager.methods(self, *args, **kwds)
 
 
 class EPCClientManager:
@@ -261,42 +262,39 @@ class EPCDispacher:        # SocketServer.TCPServer is old style class
         self.funcs[name] = function
 
 
-class EPCCaller:           # SocketServer.TCPServer is old style class
+class EPCCallManager:
+
+    Dict = LockingDict  # FIXME: make it configurable from server class.
+    """
+    Dictionary class used to store callbacks.
+    """
 
     def __init__(self):
-        self.callbacks = {}
-        self.errbacks = {}
+        self.callbacks = self.Dict()
         counter = itertools.count(1)
         self.get_uid = lambda: next(counter)
-
-    def _set_callbacks(self, uid, callback, errback):
-        self.callbacks[uid] = callback
-        self.errbacks[uid] = errback
-
-    def _pop_callbacks(self, uid):
-        return (self.callbacks.pop(uid), self.errbacks.pop(uid))
 
     def call(self, handler, name, args=[], callback=None, errback=None):
         uid = self.get_uid()
         handler._send('call', uid, Symbol(name), args)
-        self._set_callbacks(uid, callback, errback)
+        self.callbacks[uid] = (callback, errback)
 
     def methods(self, handler, callback=None, errback=None):
         uid = self.get_uid()
         handler._send('methods', uid)
-        self._set_callbacks(uid, callback, errback)
+        self.callbacks[uid] = (callback, errback)
 
     def handle_return(self, uid, reply):
         if not (isinstance(uid, int) and uid in self.callbacks):
             raise CallerUnknown(reply)
-        (callback, _) = self._pop_callbacks(uid)
+        (callback, _) = self.callbacks.pop(uid)
         if callback is not None:
             callback(reply)
 
     def _handle_error_reply(self, uid, reply, eclass, notfound):
-        if not (isinstance(uid, int) and uid in self.errbacks):
+        if not (isinstance(uid, int) and uid in self.callbacks):
             raise notfound(reply)
-        (_, errback) = self._pop_callbacks(uid)
+        (_, errback) = self.callbacks.pop(uid)
         error = eclass(reply)
         if errback is None:
             raise error
@@ -312,8 +310,35 @@ class EPCCaller:           # SocketServer.TCPServer is old style class
                                  EPCErrorCallerUnknown)
 
 
+class EPCCore(EPCDispacher):
+
+    """
+    Core methods shared by `EPCServer` and `EPCClient`.
+    """
+
+    def set_debugger(self, debugger):
+        """
+        Set debugger to run when an error occurs in published method.
+
+        You can also set debugger by passing `debugger` argument to
+        the class constructor.
+
+        :type debugger: {'pdb', 'ipdb', None}
+        :arg  debugger: type of debugger.
+
+        """
+        if debugger == 'pdb':
+            import pdb
+            self.debugger = pdb
+        elif debugger == 'ipdb':
+            import ipdb
+            self.debugger = ipdb
+        else:
+            self.debugger = debugger
+
+
 class EPCServer(SocketServer.TCPServer, EPCClientManager,
-                EPCDispacher, EPCCaller):
+                EPCCore):
 
     """
     A server class to publish functions and call functions via EPC protocol.
@@ -359,32 +384,11 @@ class EPCServer(SocketServer.TCPServer, EPCClientManager,
             self, server_address, RequestHandlerClass, bind_and_activate)
         EPCClientManager.__init__(self)
         EPCDispacher.__init__(self)
-        EPCCaller.__init__(self)
         self.logger.debug('-' * 75)
         self.logger.debug(
             "EPCServer is initialized: server_address = %r",
             self.server_address)
         self.set_debugger(debugger)
-
-    def set_debugger(self, debugger):
-        """
-        Set debugger to run when an error occurs in published method.
-
-        You can also set debugger by passing `debugger` argument to
-        the class constructor.
-
-        :type debugger: {'pdb', 'ipdb', None}
-        :arg  debugger: type of debugger.
-
-        """
-        if debugger == 'pdb':
-            import pdb
-            self.debugger = pdb
-        elif debugger == 'ipdb':
-            import ipdb
-            self.debugger = ipdb
-        else:
-            self.debugger = debugger
 
     @autolog('debug')
     def handle_error(self, request, client_address):

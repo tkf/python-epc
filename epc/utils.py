@@ -52,6 +52,9 @@ class ThreadedIterator(object):
     def _target(self):
         for result in self._original_iterable:
             self.queue.put(result)
+        self.stop()
+
+    def stop(self):
         self.queue.put(self._sentinel)
 
     def __iter__(self):
@@ -78,3 +81,7 @@ class LockingDict(dict):
     def __delitem__(self, key):
         with self._lock:
             super(LockingDict, self).__delitem__(key)
+
+    def pop(self, *args):
+        with self._lock:
+            return super(LockingDict, self).pop(*args)

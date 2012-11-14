@@ -3,9 +3,14 @@ import io
 from sexpdata import Symbol
 
 from ..client import EPCClient
-from ..core import encode_message, unpack_message
+from ..server import ReturnError, EPCError
+from ..core import encode_message, unpack_message, BlockingCallback
 from ..py3compat import Queue
 from .utils import BaseTestCase
+
+
+class FakeFile(object):
+    pass
 
 
 class FakeSocket(object):
@@ -15,6 +20,15 @@ class FakeSocket(object):
         self._buffer = io.BytesIO()
         self.sent_message = []
         self._alive = True
+
+    def makefile(self, mode, *_):
+        ff = FakeFile()
+        if 'r' in mode:
+            ff.read = self.recv
+            return ff
+        elif 'w' in mode:
+            ff.write = self.sendall
+            return ff
 
     def append(self, byte):
         self._queue.put(byte)
@@ -41,19 +55,27 @@ class FakeSocket(object):
 
     def close(self):
         self._alive = False
+        self.append(''.encode('ascii'))
 
 
 class TestClient(BaseTestCase):
 
     def setUp(self):
         self.fsock = FakeSocket()
+        self.next_reply = []
         self.client = EPCClient(self.fsock)
 
     def tearDown(self):
-        self.client.socket.close()
+        self.client.socket.close()  # connection is closed by server
 
     def set_next_reply(self, *args):
-        self.fsock.append(encode_message(*args))
+        self.next_reply.append(encode_message(*args))
+
+    def request(self, name, *args):
+        bc = BlockingCallback()
+        getattr(self.client, name)(*args, **bc.cbs)
+        self.fsock.append(self.next_reply.pop(0))  # reply comes after call!
+        return bc.result(timeout=1)
 
     def sent_message(self, i=0):
         (name, uid, rest) = unpack_message(self.fsock.sent_message[0][6:])
@@ -68,7 +90,7 @@ class TestClient(BaseTestCase):
     def check_return(self, desired_return, name, *args):
         uid = 1
         self.set_next_reply('return', uid, desired_return)
-        got = getattr(self.client, name)(*args)
+        got = self.request(name, *args)
         self.assertEqual(got, desired_return)
         self.check_sent_message(name, uid, args)
 
@@ -81,10 +103,11 @@ class TestClient(BaseTestCase):
     def check_return_error(self, reply_name, name, *args):
         uid = 1
         reply = 'error value'
-        error = ValueError(reply)
+        eclass = ReturnError if reply_name == 'return-error' else EPCError
+        error = eclass(reply)
         self.set_next_reply(reply_name, uid, reply)
         try:
-            getattr(self.client, name)(*args)
+            self.request(name, *args)
             assert False, 'self.client.{0}({1}) should raise an error' \
                 .format(name, args)
         except Exception as got:
@@ -103,3 +126,9 @@ class TestClient(BaseTestCase):
 
     def test_methods_epc_error(self):
         self.check_return_error('epc-error', 'methods')
+
+
+class TestClientClosedByClient(TestClient):
+
+    def tearDown(self):
+        self.client.close()
