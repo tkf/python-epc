@@ -310,8 +310,35 @@ class EPCCallManager:
                                  EPCErrorCallerUnknown)
 
 
+class EPCCore(EPCDispacher):
+
+    """
+    Core methods shared by `EPCServer` and `EPCClient`.
+    """
+
+    def set_debugger(self, debugger):
+        """
+        Set debugger to run when an error occurs in published method.
+
+        You can also set debugger by passing `debugger` argument to
+        the class constructor.
+
+        :type debugger: {'pdb', 'ipdb', None}
+        :arg  debugger: type of debugger.
+
+        """
+        if debugger == 'pdb':
+            import pdb
+            self.debugger = pdb
+        elif debugger == 'ipdb':
+            import ipdb
+            self.debugger = ipdb
+        else:
+            self.debugger = debugger
+
+
 class EPCServer(SocketServer.TCPServer, EPCClientManager,
-                EPCDispacher):
+                EPCCore):
 
     """
     A server class to publish functions and call functions via EPC protocol.
@@ -362,26 +389,6 @@ class EPCServer(SocketServer.TCPServer, EPCClientManager,
             "EPCServer is initialized: server_address = %r",
             self.server_address)
         self.set_debugger(debugger)
-
-    def set_debugger(self, debugger):
-        """
-        Set debugger to run when an error occurs in published method.
-
-        You can also set debugger by passing `debugger` argument to
-        the class constructor.
-
-        :type debugger: {'pdb', 'ipdb', None}
-        :arg  debugger: type of debugger.
-
-        """
-        if debugger == 'pdb':
-            import pdb
-            self.debugger = pdb
-        elif debugger == 'ipdb':
-            import ipdb
-            self.debugger = ipdb
-        else:
-            self.debugger = debugger
 
     @autolog('debug')
     def handle_error(self, request, client_address):
