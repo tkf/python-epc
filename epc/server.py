@@ -316,6 +316,10 @@ class EPCCore(EPCDispacher):
     Core methods shared by `EPCServer` and `EPCClient`.
     """
 
+    def __init__(self, debugger):
+        EPCDispacher.__init__(self)
+        self.set_debugger(debugger)
+
     def set_debugger(self, debugger):
         """
         Set debugger to run when an error occurs in published method.
@@ -383,12 +387,11 @@ class EPCServer(SocketServer.TCPServer, EPCClientManager,
         SocketServer.TCPServer.__init__(
             self, server_address, RequestHandlerClass, bind_and_activate)
         EPCClientManager.__init__(self)
-        EPCDispacher.__init__(self)
+        EPCCore.__init__(self, debugger)
         self.logger.debug('-' * 75)
         self.logger.debug(
             "EPCServer is initialized: server_address = %r",
             self.server_address)
-        self.set_debugger(debugger)
 
     @autolog('debug')
     def handle_error(self, request, client_address):

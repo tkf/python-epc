@@ -38,7 +38,7 @@ class EPCClient(EPCCore):
         self.get_uid = lambda: next(counter)
         if socket_or_address is not None:
             self.connect(socket_or_address)
-        self.set_debugger(debugger)
+        EPCCore.__init__(self, debugger)
 
     def connect(self, socket_or_address):
         if isinstance(socket_or_address, tuple):
