@@ -14,10 +14,19 @@ Server
    :parts: 1
 
 .. autoclass:: EPCServer
+   :no-members:
 
-   .. automethod:: EPCDispacher.register_function
+   .. automethod:: register_function
+   .. automethod:: set_debugger
+   .. automethod:: print_port
 
-.. autoclass:: EPCClientManager
+   .. py:attribute:: clients
+      :annotation: = []
+
+      A list of :py:class:`EPCHandler` object for connected clients.
+
+   .. automethod:: handle_client_connect
+   .. automethod:: handle_client_disconnect
 
 .. autoclass:: ThreadingEPCServer
 
