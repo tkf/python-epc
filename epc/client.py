@@ -4,6 +4,18 @@ import itertools
 from .server import EPCHandler
 
 
+class EPCClientHandler(EPCHandler):
+
+    # In BaseRequestHandler, everything happen in `.__init__()`.
+    # Let's defer it to `.start()`.
+
+    def __init__(self, *args):
+        self._args = args
+
+    def start(self):
+        EPCHandler.__init__(self, *self._args)
+
+
 class EPCClient(object):
 
     def __init__(self, socket_or_address=None):
@@ -21,12 +33,12 @@ class EPCClient(object):
 
         # This is what BaseServer.finish_request does:
         address = None  # it is not used, so leave it empty
-        self.handler = EPCHandler(self.socket, address, self)
+        self.handler = EPCClientHandler(self.socket, address, self)
 
         self.call = self.handler.call
         self.methods = self.handler.methods
 
-        self.handler_thread = threading.Thread(target=self.handler.handle)
+        self.handler_thread = threading.Thread(target=self.handler.start)
         self.handler_thread.start()
 
     def _ignore(*_):
