@@ -174,7 +174,7 @@ class EPCHandler(SocketServer.StreamRequestHandler):
         :arg      args: Arguments for remote method to call.
         :type callback: callable
         :arg  callback: A function to be called with returned value of
-                        the remove method.
+                        the remote method.
         :type  errback: callable
         :arg   errback: A function to be called with an error occurred
                         in the remote method.  It is either an instance
