@@ -1,6 +1,7 @@
 import threading
 import itertools
 
+from .py3compat import Queue
 from .server import EPCHandler, EPCCore
 
 
@@ -11,9 +12,17 @@ class EPCClientHandler(EPCHandler):
 
     def __init__(self, *args):
         self._args = args
+        self._ready = Queue.Queue()
 
     def start(self):
         EPCHandler.__init__(self, *self._args)
+
+    def setup(self):
+        EPCHandler.setup(self)
+        self._ready.put(True)
+
+    def wait_until_ready(self):
+        self._ready.get()
 
 
 class EPCClient(EPCCore):
@@ -41,6 +50,7 @@ class EPCClient(EPCCore):
 
         self.handler_thread = threading.Thread(target=self.handler.start)
         self.handler_thread.start()
+        self.handler.wait_until_ready()
 
     def _ignore(*_):
         """"Do nothing method for `EPCHandler`."""
