@@ -359,8 +359,10 @@ class EPCServer(SocketServer.TCPServer, EPCClientManager,
     >>> server = EPCServer(('localhost', 0))
     >>> def echo(*a):
     ...     return a
-    >>> server.register_function(echo)
+    >>> server.register_function(echo)                 #doctest: +ELLIPSIS
+    <function echo at 0x...>
     >>> server.print_port()                                #doctest: +SKIP
+    9999
     >>> server.serve_forever()                             #doctest: +SKIP
 
     To call client's method, use :attr:`clients <EPCClientManager.clients>`
