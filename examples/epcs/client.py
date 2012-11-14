@@ -7,6 +7,9 @@ def run_client(address, port):
     print(client.methods())
     print("Calling (echo 1)")
     print("Got: {0}".format(client.call('echo', [1])))
+    print("Closing client...")
+    client.close()
+    print("Closing client... Done!")
 
 
 def main(args=None):
