@@ -78,3 +78,7 @@ class LockingDict(dict):
     def __delitem__(self, key):
         with self._lock:
             super(LockingDict, self).__delitem__(key)
+
+    def pop(self, *args):
+        with self._lock:
+            return super(LockingDict, self).pop(*args)

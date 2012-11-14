@@ -38,3 +38,10 @@ class TestLockingDict(BaseTestCase):
         del ld['a']
         del ld['b']
         self.assertEqual(dict(**self.ld), dict(c=3))
+
+    def test_simple_pop_items(self):
+        self.test_simple_set_items()
+        ld = self.ld
+        self.assertEqual(ld.pop('a'), 1)
+        self.assertEqual(ld.pop('b'), 2)
+        self.assertEqual(dict(**self.ld), dict(c=3))
