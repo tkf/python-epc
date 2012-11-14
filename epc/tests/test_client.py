@@ -55,6 +55,7 @@ class FakeSocket(object):
 
     def close(self):
         self._alive = False
+        self.append('')
 
 
 class TestClient(BaseTestCase):
