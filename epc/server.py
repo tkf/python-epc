@@ -5,7 +5,7 @@ import itertools
 from sexpdata import Symbol, String
 
 from .py3compat import SocketServer
-from .utils import autolog
+from .utils import autolog, LockingDict
 from .core import encode_message, unpack_message
 
 
@@ -265,8 +265,16 @@ class EPCCaller:           # SocketServer.TCPServer is old style class
 
     # FIXME: do not use this class as a mix-in (?)
 
+    Dict = dict
+    """
+    Dictionary class used to store callbacks.
+
+    Thread-safe one is used for :class:`ThreadingEPCServer`.
+
+    """
+
     def __init__(self):
-        self.callbacks = {}
+        self.callbacks = self.Dict()
         counter = itertools.count(1)
         self.get_uid = lambda: next(counter)
 
@@ -420,6 +428,8 @@ class ThreadingEPCServer(SocketServer.ThreadingMixIn, EPCServer):
        https://github.com/tkf/python-epc/blob/master/examples/gtk/server.py
 
     """
+
+    Dict = LockingDict
 
 
 def echo_server(address='localhost', port=0):
