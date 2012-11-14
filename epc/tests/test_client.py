@@ -55,7 +55,7 @@ class FakeSocket(object):
 
     def close(self):
         self._alive = False
-        self.append('')
+        self.append(''.encode('ascii'))
 
 
 class TestClient(BaseTestCase):
