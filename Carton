@@ -1,4 +1,4 @@
-(source "marmalade" "http://marmalade-repo.org/packages/")
+(source "melpa" "http://melpa.milkbox.net/packages/")
 
 (development
  (depends-on "epc"))
