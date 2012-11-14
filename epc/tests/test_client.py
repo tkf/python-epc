@@ -3,6 +3,7 @@ import io
 from sexpdata import Symbol
 
 from ..client import EPCClient
+from ..server import ReturnError, EPCError
 from ..core import encode_message, unpack_message
 from ..py3compat import Queue
 from .utils import BaseTestCase
@@ -81,7 +82,7 @@ class TestClient(BaseTestCase):
     def check_return(self, desired_return, name, *args):
         uid = 1
         self.set_next_reply('return', uid, desired_return)
-        got = getattr(self.client, name)(*args)
+        got = getattr(self.client, name + '_block')(*args)
         self.assertEqual(got, desired_return)
         self.check_sent_message(name, uid, args)
 
@@ -94,10 +95,11 @@ class TestClient(BaseTestCase):
     def check_return_error(self, reply_name, name, *args):
         uid = 1
         reply = 'error value'
-        error = ValueError(reply)
+        eclass = ReturnError if reply_name == 'return-error' else EPCError
+        error = eclass(reply)
         self.set_next_reply(reply_name, uid, reply)
         try:
-            getattr(self.client, name)(*args)
+            getattr(self.client, name + '_block')(*args)
             assert False, 'self.client.{0}({1}) should raise an error' \
                 .format(name, args)
         except Exception as got:

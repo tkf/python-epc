@@ -56,3 +56,21 @@ class EPCClient(EPCCore):
         """"Do nothing method for `EPCHandler`."""
     add_client = _ignore
     remove_client = _ignore
+
+    @staticmethod
+    def _blocking_request(call, *args):
+        q = Queue.Queue()
+        call(*args,
+             callback=lambda x: q.put(('return', x)),
+             errback=lambda x: q.put(('error', x)))
+        (rtype, reply) = q.get()
+        if rtype == 'return':
+            return reply
+        else:
+            raise reply
+
+    def call_block(self, name, args):
+        return self._blocking_request(self.call, name, args)
+
+    def methods_block(self):
+        return self._blocking_request(self.methods)
