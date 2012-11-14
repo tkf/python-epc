@@ -1,7 +1,7 @@
 import threading
 import itertools
 
-from .server import EPCHandler
+from .server import EPCHandler, EPCCore
 
 
 class EPCClientHandler(EPCHandler):
@@ -16,13 +16,14 @@ class EPCClientHandler(EPCHandler):
         EPCHandler.__init__(self, *self._args)
 
 
-class EPCClient(object):
+class EPCClient(EPCCore):
 
-    def __init__(self, socket_or_address=None):
+    def __init__(self, socket_or_address=None, debugger=None):
         counter = itertools.count(1)
         self.get_uid = lambda: next(counter)
         if socket_or_address is not None:
             self.connect(socket_or_address)
+        self.set_debugger(debugger)
 
     def connect(self, socket_or_address):
         if isinstance(socket_or_address, tuple):
