@@ -352,7 +352,7 @@ class EPCServer(SocketServer.TCPServer, EPCClientManager,
     A server class to publish functions and call functions via EPC protocol.
 
     To publish Python functions, all you need is
-    :meth:`register_function() <EPCDispacher.register_function>`,
+    :meth:`register_function`,
     :meth:`print_port` and
     :meth:`serve_forever() <SocketServer.BaseServer.serve_forever>`.
 
