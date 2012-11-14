@@ -76,7 +76,7 @@ class EPCHandler(SocketServer.StreamRequestHandler):
     @autolog('debug')
     def finish(self):
         try:
-            SocketServer.StreamRequestHandler.setup(self)
+            SocketServer.StreamRequestHandler.finish(self)
         finally:
             self.server.remove_client(self)
 
