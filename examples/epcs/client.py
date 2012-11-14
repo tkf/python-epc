@@ -4,9 +4,9 @@ from epc.client import EPCClient
 def run_client(address, port):
     client = EPCClient((address, port))
     print("Server provides these methods:")
-    print(client.methods())
+    print(client.methods_block())
     print("Calling (echo 1)")
-    print("Got: {0}".format(client.call('echo', [1])))
+    print("Got: {0}".format(client.call_block('echo', [1])))
     print("Closing client...")
     client.close()
     print("Closing client... Done!")
