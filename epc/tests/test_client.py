@@ -8,6 +8,10 @@ from ..py3compat import Queue
 from .utils import BaseTestCase
 
 
+class FakeFile(object):
+    pass
+
+
 class FakeSocket(object):
 
     def __init__(self):
@@ -15,6 +19,15 @@ class FakeSocket(object):
         self._buffer = io.BytesIO()
         self.sent_message = []
         self._alive = True
+
+    def makefile(self, mode, *_):
+        ff = FakeFile()
+        if 'r' in mode:
+            ff.read = self.recv
+            return ff
+        elif 'w' in mode:
+            ff.write = self.sendall
+            return ff
 
     def append(self, byte):
         self._queue.put(byte)
