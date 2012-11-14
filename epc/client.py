@@ -58,19 +58,19 @@ class EPCClient(EPCCore):
     remove_client = _ignore
 
     @staticmethod
-    def _blocking_request(call, *args):
+    def _blocking_request(call, timeout, *args):
         q = Queue.Queue()
         call(*args,
              callback=lambda x: q.put(('return', x)),
              errback=lambda x: q.put(('error', x)))
-        (rtype, reply) = q.get()
+        (rtype, reply) = q.get(timeout=timeout)
         if rtype == 'return':
             return reply
         else:
             raise reply
 
-    def call_block(self, name, args):
-        return self._blocking_request(self.call, name, args)
+    def call_block(self, name, args, timeout=None):
+        return self._blocking_request(self.call, timeout, name, args)
 
-    def methods_block(self):
-        return self._blocking_request(self.methods)
+    def methods_block(self, timeout=None):
+        return self._blocking_request(self.methods, timeout)

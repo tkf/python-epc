@@ -82,7 +82,7 @@ class TestClient(BaseTestCase):
     def check_return(self, desired_return, name, *args):
         uid = 1
         self.set_next_reply('return', uid, desired_return)
-        got = getattr(self.client, name + '_block')(*args)
+        got = getattr(self.client, name + '_block')(*args, timeout=1)
         self.assertEqual(got, desired_return)
         self.check_sent_message(name, uid, args)
 
@@ -99,7 +99,7 @@ class TestClient(BaseTestCase):
         error = eclass(reply)
         self.set_next_reply(reply_name, uid, reply)
         try:
-            getattr(self.client, name + '_block')(*args)
+            getattr(self.client, name + '_block')(*args, timeout=1)
             assert False, 'self.client.{0}({1}) should raise an error' \
                 .format(name, args)
         except Exception as got:
