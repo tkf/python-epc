@@ -66,7 +66,7 @@ class TestClient(BaseTestCase):
         self.client = EPCClient(self.fsock)
 
     def tearDown(self):
-        self.client.socket.close()
+        self.client.socket.close()  # connection is closed by server
 
     def set_next_reply(self, *args):
         self.next_reply.append(encode_message(*args))
@@ -126,3 +126,9 @@ class TestClient(BaseTestCase):
 
     def test_methods_epc_error(self):
         self.check_return_error('epc-error', 'methods')
+
+
+class TestClientClosedByClient(TestClient):
+
+    def tearDown(self):
+        self.client.close()
