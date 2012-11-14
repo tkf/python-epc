@@ -32,6 +32,8 @@ class EPCClientHandler(EPCHandler):
 
 class EPCClient(EPCCore):
 
+    thread_daemon = True
+
     def __init__(self, socket_or_address=None, debugger=None):
         if socket_or_address is not None:
             self.connect(socket_or_address)
@@ -52,6 +54,7 @@ class EPCClient(EPCCore):
         self.methods = self.handler.methods
 
         self.handler_thread = threading.Thread(target=self.handler.start)
+        self.handler_thread.daemon = self.thread_daemon
         self.handler_thread.start()
         self.handler.wait_until_ready()
 
