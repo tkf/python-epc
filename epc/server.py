@@ -72,6 +72,7 @@ class EPCHandler(SocketServer.StreamRequestHandler):
     def setup(self):
         SocketServer.StreamRequestHandler.setup(self)
         self.server.add_client(self)
+        self.callmanager = EPCCallManager()
 
     @autolog('debug')
     def finish(self):
@@ -143,13 +144,13 @@ class EPCHandler(SocketServer.StreamRequestHandler):
             in self.server.funcs.items()]]
 
     def _handle_return(self, uid, reply):
-        self.server.handle_return(uid, reply)
+        self.callmanager.handle_return(uid, reply)
 
     def _handle_return_error(self, uid, reply):
-        self.server.handle_return_error(uid, reply)
+        self.callmanager.handle_return_error(uid, reply)
 
     def _handle_epc_error(self, uid, reply):
-        self.server.handle_epc_error(uid, reply)
+        self.callmanager.handle_epc_error(uid, reply)
 
     def handle_error(self, err):
         """
@@ -181,7 +182,7 @@ class EPCHandler(SocketServer.StreamRequestHandler):
                         of :class:`ReturnError` or :class:`EPCError`.
 
         """
-        self.server.call(self, name, *args, **kwds)
+        self.callmanager.call(self, name, *args, **kwds)
 
     def methods(self, *args, **kwds):
         """
@@ -191,7 +192,7 @@ class EPCHandler(SocketServer.StreamRequestHandler):
         this function too.
 
         """
-        self.server.methods(self, *args, **kwds)
+        self.callmanager.methods(self, *args, **kwds)
 
 
 class EPCClientManager:
@@ -261,16 +262,11 @@ class EPCDispacher:        # SocketServer.TCPServer is old style class
         self.funcs[name] = function
 
 
-class EPCCaller:           # SocketServer.TCPServer is old style class
+class EPCCallManager:
 
-    # FIXME: do not use this class as a mix-in (?)
-
-    Dict = dict
+    Dict = LockingDict  # FIXME: make it configurable from server class.
     """
     Dictionary class used to store callbacks.
-
-    Thread-safe one is used for :class:`ThreadingEPCServer`.
-
     """
 
     def __init__(self):
@@ -315,7 +311,7 @@ class EPCCaller:           # SocketServer.TCPServer is old style class
 
 
 class EPCServer(SocketServer.TCPServer, EPCClientManager,
-                EPCDispacher, EPCCaller):
+                EPCDispacher):
 
     """
     A server class to publish functions and call functions via EPC protocol.
@@ -361,7 +357,6 @@ class EPCServer(SocketServer.TCPServer, EPCClientManager,
             self, server_address, RequestHandlerClass, bind_and_activate)
         EPCClientManager.__init__(self)
         EPCDispacher.__init__(self)
-        EPCCaller.__init__(self)
         self.logger.debug('-' * 75)
         self.logger.debug(
             "EPCServer is initialized: server_address = %r",
@@ -428,8 +423,6 @@ class ThreadingEPCServer(SocketServer.ThreadingMixIn, EPCServer):
        https://github.com/tkf/python-epc/blob/master/examples/gtk/server.py
 
     """
-
-    Dict = LockingDict
 
 
 def echo_server(address='localhost', port=0):
