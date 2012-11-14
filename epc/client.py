@@ -1,5 +1,4 @@
 import threading
-import itertools
 
 from .py3compat import Queue
 from .utils import ThreadedIterator
@@ -34,8 +33,6 @@ class EPCClientHandler(EPCHandler):
 class EPCClient(EPCCore):
 
     def __init__(self, socket_or_address=None, debugger=None):
-        counter = itertools.count(1)
-        self.get_uid = lambda: next(counter)
         if socket_or_address is not None:
             self.connect(socket_or_address)
         EPCCore.__init__(self, debugger)
