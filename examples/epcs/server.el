@@ -4,7 +4,11 @@
 (defvar pyepc-epcs
   (epcs:server-start
    (lambda (mngr)
-     (epc:define-method mngr 'echo 'identity))
+     (lexical-let ((mngr mngr))
+       (epc:define-method mngr 'echo 'identity)
+       (epc:define-method
+        mngr 'ping-pong
+        (lambda (&rest args) (epc:call-sync mngr 'pong args)))))
    9999))
 
 (when noninteractive
