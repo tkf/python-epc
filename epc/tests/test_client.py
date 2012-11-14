@@ -65,6 +65,11 @@ class TestClient(BaseTestCase):
         self.next_reply = []
         self.client = EPCClient(self.fsock)
 
+        @self.client.register_function
+        def echo(*a):
+            """Return argument unchanged."""
+            return a
+
     def tearDown(self):
         self.client.socket.close()  # connection is closed by server
 
@@ -127,6 +132,11 @@ class TestClient(BaseTestCase):
 
     def test_methods_epc_error(self):
         self.check_return_error('epc-error', 'methods')
+
+    def test_echo(self):
+        uid = 1
+        self.fsock.append(encode_message('call', uid, Symbol('echo'), [55]))
+        self.check_sent_message('return', uid, [[55]])
 
 
 class TestClientClosedByClient(TestClient):
