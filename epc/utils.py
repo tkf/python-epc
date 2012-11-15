@@ -39,12 +39,30 @@ def autolog(level):
     return wrapper
 
 
+def newname(template="EPCThread-{0}"):
+    global _counter
+    _counter = _counter + 1
+    return template.format(_counter)
+_counter = 0
+
+
+def newthread(template, **kwds):
+    """
+    Instantiate :class:`threading.Thread` with an appropriate name.
+    """
+    if not isinstance(template, str):
+        template = '{0}.{1}-{{0}}'.format(template.__module__,
+                                          template.__class__.__name__)
+    return threading.Thread(
+        name=newname(template), **kwds)
+
+
 class ThreadedIterator(object):
 
     def __init__(self, iterable):
         self._original_iterable = iterable
         self.queue = Queue.Queue()
-        self.thread = threading.Thread(target=self._target)
+        self.thread = newthread(self, target=self._target)
         self.thread.daemon = True
         self._sentinel = object()
         self.thread.start()

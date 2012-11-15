@@ -1,7 +1,5 @@
-import threading
-
 from .py3compat import Queue
-from .utils import ThreadedIterator
+from .utils import ThreadedIterator, newthread
 from .server import EPCHandler, EPCCore
 
 
@@ -105,7 +103,7 @@ class EPCClient(EPCCore):
         self.methods = self.handler.methods
         self.methods_sync = self.handler.methods_sync
 
-        self.handler_thread = threading.Thread(target=self.handler.start)
+        self.handler_thread = newthread(self, target=self.handler.start)
         self.handler_thread.daemon = self.thread_daemon
         self.handler_thread.start()
         self.handler.wait_until_ready()
