@@ -72,8 +72,8 @@ class EPCClient(EPCCore):
         call(*args, **bc.cbs)
         return bc.result(timeout=timeout)
 
-    def call_block(self, name, args, timeout=None):
+    def call_sync(self, name, args, timeout=None):
         return self._blocking_request(self.call, timeout, name, args)
 
-    def methods_block(self, timeout=None):
+    def methods_sync(self, timeout=None):
         return self._blocking_request(self.methods, timeout)
