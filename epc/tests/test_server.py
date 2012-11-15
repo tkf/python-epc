@@ -18,9 +18,9 @@ class BaseEPCServerTestCase(BaseTestCase):
 
     def setUp(self):
         # See: http://stackoverflow.com/questions/7720953
+        ThreadingEPCServer.allow_reuse_address = True
         self.server = ThreadingEPCServer(('localhost', 0))
         self.server_thread = newthread(self, target=self.server.serve_forever)
-        self.server_thread.allow_reuse_address = True
         self.server_thread.start()
 
         def echo(*a):

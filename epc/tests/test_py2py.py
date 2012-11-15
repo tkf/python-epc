@@ -8,6 +8,7 @@ from .utils import BaseTestCase
 class TestEPCPy2Py(BaseTestCase):
 
     def setUp(self):
+        ThreadingEPCServer.allow_reuse_address = True
         self.server = ThreadingEPCServer(('localhost', 0))
         self.server.daemon_threads = True
         self.server_thread = newthread(self, target=self.server.serve_forever)
