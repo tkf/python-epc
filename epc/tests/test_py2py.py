@@ -40,16 +40,26 @@ class TestEPCPy2Py(BaseTestCase):
     def wait_until_client_is_connected(self):
         self.client_queue.get(timeout=1)
 
+    def assert_call_return(self, call, method, args, reply):
+        self.assertEqual(call(method, args), reply)
+
+    def assert_client_return(self, method, args, reply):
+        self.assert_call_return(self.client.call_sync, method, args, reply)
+
+    def assert_server_return(self, method, args, reply):
+        self.wait_until_client_is_connected()
+        self.assert_call_return(self.server.clients[0].call_sync,
+                                method, args, reply)
+
     def test_client_calls_server_echo(self):
-        self.assertEqual(self.client.call_sync('echo', [55]), [55])
+        self.assert_client_return('echo', [55], [55])
 
     def test_client_calls_server_bad_method(self):
         self.assertRaises(
             ReturnError, self.client.call_sync, 'bad_method', [55])
 
     def test_server_calls_client_echo(self):
-        self.wait_until_client_is_connected()
-        self.assertEqual(self.server.clients[0].call_sync('echo', [55]), [55])
+        self.assert_server_return('echo', [55], [55])
 
     def test_server_calls_client_bad_method(self):
         self.wait_until_client_is_connected()
