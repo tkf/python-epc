@@ -3,7 +3,7 @@ from ..server import ThreadingEPCServer
 from ..server import ReturnError
 from ..utils import newthread
 from ..py3compat import Queue
-from .utils import BaseTestCase
+from .utils import BaseTestCase, skip
 
 
 class TestEPCPy2Py(BaseTestCase):
@@ -82,8 +82,10 @@ class TestEPCPy2Py(BaseTestCase):
         self.assertRaises(
             ReturnError, self.server.clients[0].call_sync, 'bad_method', [55])
 
+    @skip
     def test_client_ping_pong(self):
         self.assert_client_return('ping_server', [55], [55])
 
+    @skip
     def test_server_ping_pong(self):
         self.assert_server_return('ping_client', [55], [55])

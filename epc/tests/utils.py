@@ -20,3 +20,13 @@ class BaseTestCase(unittest.TestCase):
     if not hasattr(unittest.TestCase, 'assertIsInstance'):
         def assertIsInstance(self, obj, cls, msg=None):
             self.assertTrue(isinstance(obj, cls), msg),
+
+
+def skip(func):
+    import functools
+    from nose import SkipTest
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwds):
+        raise SkipTest
+    return wrapper
