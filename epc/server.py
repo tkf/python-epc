@@ -81,14 +81,26 @@ class EPCHandler(SocketServer.StreamRequestHandler):
         finally:
             self.server.remove_client(self)
 
+    def _rfile_read_safely(self, size):
+        try:
+            return self.rfile.read(size)
+        except (AttributeError, ValueError):
+            if self.rfile.closed:
+                # Calling read on closed socket raises
+                # AttributeError in 2.x and ValueError in 3.x.
+                # http://bugs.python.org/issue9177
+                raise StopIteration
+            else:
+                raise  # if not, just re-raise it.
+
     def _recv(self):
         while True:
             self.logger.debug('receiving...')
-            head = self.rfile.read(6)
+            head = self._rfile_read_safely(6)
             if not head:
                 return
             length = int(head, 16)
-            data = self.rfile.read(length)
+            data = self._rfile_read_safely(length)
             if len(data) < length:
                 raise ValueError('need {0}-length data; got {1}'
                                  .format(length, len(data)))
