@@ -32,6 +32,22 @@ class TestEPCPy2Py(BaseTestCase):
             """This is a bad method.  Don't call!"""
             raise ValueError("This is a bad method!")
 
+        @self.server.register_function
+        def ping_server(x):
+            return self.client.call_sync('pong_client', [x])
+
+        @self.client.register_function
+        def pong_client(x):
+            return self.server.clients[0].call_sync('echo', [x])
+
+        @self.client.register_function
+        def ping_client(x):
+            return self.server.clients[0].call_sync('pong_server', [x])
+
+        @self.server.register_function
+        def pong_server(x):
+            return self.client.call_sync('echo', [x])
+
     def tearDown(self):
         self.client.close()
         self.server.shutdown()
@@ -41,7 +57,7 @@ class TestEPCPy2Py(BaseTestCase):
         self.client_queue.get(timeout=1)
 
     def assert_call_return(self, call, method, args, reply):
-        self.assertEqual(call(method, args), reply)
+        self.assertEqual(call(method, args, timeout=1), reply)
 
     def assert_client_return(self, method, args, reply):
         self.assert_call_return(self.client.call_sync, method, args, reply)
@@ -65,3 +81,9 @@ class TestEPCPy2Py(BaseTestCase):
         self.wait_until_client_is_connected()
         self.assertRaises(
             ReturnError, self.server.clients[0].call_sync, 'bad_method', [55])
+
+    def test_client_ping_pong(self):
+        self.assert_client_return('ping_server', [55], [55])
+
+    def test_server_ping_pong(self):
+        self.assert_server_return('ping_client', [55], [55])
