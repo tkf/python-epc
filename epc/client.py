@@ -2,7 +2,6 @@ import threading
 
 from .py3compat import Queue
 from .utils import ThreadedIterator
-from .core import BlockingCallback
 from .server import EPCHandler, EPCCore
 
 
@@ -85,7 +84,9 @@ class EPCClient(EPCCore):
         self.handler = EPCClientHandler(self.socket, address, self)
 
         self.call = self.handler.call
+        self.call_sync = self.handler.call_sync
         self.methods = self.handler.methods
+        self.methods_sync = self.handler.methods_sync
 
         self.handler_thread = threading.Thread(target=self.handler.start)
         self.handler_thread.daemon = self.thread_daemon
@@ -100,33 +101,3 @@ class EPCClient(EPCCore):
         """"Do nothing method for `EPCHandler`."""
     add_client = _ignore
     remove_client = _ignore
-
-    @staticmethod
-    def _blocking_request(call, timeout, *args):
-        bc = BlockingCallback()
-        call(*args, **bc.cbs)
-        return bc.result(timeout=timeout)
-
-    def call_sync(self, name, args, timeout=None):
-        """
-        Blocking version of :meth:`call`.
-
-        :type    name: str
-        :arg     name: Remote function name to call.
-        :type    args: list
-        :arg     args: Arguments passed to the remote function.
-        :type timeout: int or None
-        :arg  timeout: Timeout in second.  None means no timeout.
-
-        If the called remote function raise an exception, this method
-        raise an exception.  If you give `timeout`, this method may
-        raise an `Empty` exception.
-
-        """
-        return self._blocking_request(self.call, timeout, name, args)
-
-    def methods_sync(self, timeout=None):
-        """
-        Blocking version of :meth:`methods`.  See also :meth:`call_sync`.
-        """
-        return self._blocking_request(self.methods, timeout)

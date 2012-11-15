@@ -6,7 +6,7 @@ from sexpdata import Symbol, String
 
 from .py3compat import SocketServer
 from .utils import autolog, LockingDict
-from .core import encode_message, unpack_message
+from .core import encode_message, unpack_message, BlockingCallback
 
 
 _logger = logging.getLogger('epc.server')
@@ -193,6 +193,36 @@ class EPCHandler(SocketServer.StreamRequestHandler):
 
         """
         self.callmanager.methods(self, *args, **kwds)
+
+    @staticmethod
+    def _blocking_request(call, timeout, *args):
+        bc = BlockingCallback()
+        call(*args, **bc.cbs)
+        return bc.result(timeout=timeout)
+
+    def call_sync(self, name, args, timeout=None):
+        """
+        Blocking version of :meth:`call`.
+
+        :type    name: str
+        :arg     name: Remote function name to call.
+        :type    args: list
+        :arg     args: Arguments passed to the remote function.
+        :type timeout: int or None
+        :arg  timeout: Timeout in second.  None means no timeout.
+
+        If the called remote function raise an exception, this method
+        raise an exception.  If you give `timeout`, this method may
+        raise an `Empty` exception.
+
+        """
+        return self._blocking_request(self.call, timeout, name, args)
+
+    def methods_sync(self, timeout=None):
+        """
+        Blocking version of :meth:`methods`.  See also :meth:`call_sync`.
+        """
+        return self._blocking_request(self.methods, timeout)
 
 
 class EPCClientManager:
