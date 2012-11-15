@@ -23,6 +23,9 @@ class FakeSocket(object):
 
     def makefile(self, mode, *_):
         ff = FakeFile()
+        ff.closed = False
+        ff.close = lambda: None
+        ff.flush = lambda: None
         if 'r' in mode:
             ff.read = self.recv
             return ff
