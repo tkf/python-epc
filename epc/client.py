@@ -34,6 +34,27 @@ class EPCClient(EPCCore):
 
     """
     EPC client class to call remote functions and serve Python functions.
+
+    >>> client = EPCClient()
+    >>> client.connect(('localhost', 9999))                 #doctest: +SKIP
+    >>> client.call_sync('echo', [111, 222, 333])           #doctest: +SKIP
+    [111, 222, 333]
+
+    To serve Python functions, you can use :meth:`register_function`.
+
+    >>> client.register_function(str.upper)
+    <method 'upper' of 'str' objects>
+
+    :meth:`register_function` can be used as a decorator.
+
+    >>> @client.register_function
+    ... def add(x, y):
+    ...     return x + y
+
+    Also, you can initialize client and connect to the server by one line.
+
+    >>> client = EPCClient(('localhost', 0))                #doctest: +SKIP
+
     """
 
     thread_daemon = True
