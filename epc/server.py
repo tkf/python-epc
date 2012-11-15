@@ -71,8 +71,8 @@ class EPCHandler(SocketServer.StreamRequestHandler):
     @autolog('debug')
     def setup(self):
         SocketServer.StreamRequestHandler.setup(self)
-        self.server.add_client(self)
         self.callmanager = EPCCallManager()
+        self.server.add_client(self)
 
     @autolog('debug')
     def finish(self):
