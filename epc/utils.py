@@ -1,6 +1,9 @@
 import logging
 import itertools
 import functools
+import threading
+
+from .py3compat import Queue
 
 
 def func_call_as_str(name, *args, **kwds):
@@ -34,3 +37,51 @@ def autolog(level):
             return ret
         return new_method
     return wrapper
+
+
+class ThreadedIterator(object):
+
+    def __init__(self, iterable):
+        self._original_iterable = iterable
+        self.queue = Queue.Queue()
+        self.thread = threading.Thread(target=self._target)
+        self.thread.daemon = True
+        self._sentinel = object()
+        self.thread.start()
+
+    def _target(self):
+        for result in self._original_iterable:
+            self.queue.put(result)
+        self.stop()
+
+    def stop(self):
+        self.queue.put(self._sentinel)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        got = self.queue.get()
+        if got is self._sentinel:
+            raise StopIteration
+        return got
+    next = __next__  # for PY2
+
+
+class LockingDict(dict):
+
+    def __init__(self, *args, **kwds):
+        super(LockingDict, self).__init__(*args, **kwds)
+        self._lock = threading.Lock()
+
+    def __setitem__(self, key, value):
+        with self._lock:
+            super(LockingDict, self).__setitem__(key, value)
+
+    def __delitem__(self, key):
+        with self._lock:
+            super(LockingDict, self).__delitem__(key)
+
+    def pop(self, *args):
+        with self._lock:
+            return super(LockingDict, self).pop(*args)

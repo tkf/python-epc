@@ -1,5 +1,7 @@
 from sexpdata import loads, dumps, Symbol
 
+from .py3compat import Queue
+
 
 def encode_string(string):
     data = string.encode('utf-8')
@@ -33,3 +35,19 @@ def itermessage(read):
             raise ValueError('need {0}-length data; got {1}'
                              .format(length, len(data)))
         yield data
+
+
+class BlockingCallback(object):
+
+    def __init__(self):
+        self.queue = q = Queue.Queue()
+        self.callback = lambda x: q.put(('return', x))
+        self.errback = lambda x: q.put(('error', x))
+        self.cbs = {'callback': self.callback, 'errback': self.errback}
+
+    def result(self, timeout):
+        (rtype, reply) = self.queue.get(timeout=timeout)
+        if rtype == 'return':
+            return reply
+        else:
+            raise reply
