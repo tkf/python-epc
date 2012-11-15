@@ -54,6 +54,23 @@ class EPCClient(EPCCore):
 
     >>> client = EPCClient(('localhost', 0))                #doctest: +SKIP
 
+    .. method:: call
+
+       Alias of :meth:`epc.server.EPCHandler.call`.
+
+    .. method:: call_sync
+
+       Alias of :meth:`epc.server.EPCHandler.call_sync`.
+
+    .. method:: methods
+
+       Alias of :meth:`epc.server.EPCHandler.methods`.
+
+    .. method:: methods_sync
+
+       Alias of :meth:`epc.server.EPCHandler.methods_sync`.
+
+
     """
 
     thread_daemon = True

@@ -55,10 +55,6 @@ EPC client API
 
    .. automethod:: connect
    .. automethod:: close
-   .. py:method:: call
-   .. automethod:: call_sync
-   .. py:method:: methods
-   .. automethod:: methods_sync
 
 
 EPC exceptions
