@@ -22,11 +22,14 @@ class BaseTestCase(unittest.TestCase):
             self.assertTrue(isinstance(obj, cls), msg),
 
 
-def skip(func):
+def skip(reason):
     import functools
     from nose import SkipTest
 
-    @functools.wraps(func)
-    def wrapper(*args, **kwds):
-        raise SkipTest
-    return wrapper
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwds):
+            raise SkipTest("Skipping {0} because: {1}"
+                           .format(func.__name__, reason))
+        return wrapper
+    return decorator
