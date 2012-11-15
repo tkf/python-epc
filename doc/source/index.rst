@@ -30,6 +30,7 @@ Server
 
 .. autoclass:: ThreadingEPCServer
 
+
 Handler
 -------
 
@@ -40,8 +41,30 @@ Handler
 .. autoclass:: EPCHandler
 
 
+EPC client API
+==============
+
+.. py:module:: epc.client
+
+.. inheritance-diagram::
+   EPCClient
+   :parts: 1
+
+.. autoclass:: EPCClient
+   :no-members:
+
+   .. automethod:: connect
+   .. automethod:: close
+   .. py:method:: call
+   .. automethod:: call_sync
+   .. py:method:: methods
+   .. automethod:: methods_sync
+
+
 EPC exceptions
 ==============
+
+.. py:module:: epc.server
 
 .. inheritance-diagram::
    EPCErrorCallerUnknown
