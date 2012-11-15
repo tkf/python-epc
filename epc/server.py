@@ -289,16 +289,18 @@ class EPCCallManager:
         self.callbacks[uid] = (callback, errback)
 
     def handle_return(self, uid, reply):
-        if not (isinstance(uid, int) and uid in self.callbacks):
+        try:
+            (callback, _) = self.callbacks.pop(uid)
+        except (KeyError, TypeError):
             raise CallerUnknown(reply)
-        (callback, _) = self.callbacks.pop(uid)
         if callback is not None:
             callback(reply)
 
     def _handle_error_reply(self, uid, reply, eclass, notfound):
-        if not (isinstance(uid, int) and uid in self.callbacks):
+        try:
+            (_, errback) = self.callbacks.pop(uid)
+        except (KeyError, TypeError):
             raise notfound(reply)
-        (_, errback) = self.callbacks.pop(uid)
         error = eclass(reply)
         if errback is None:
             raise error
