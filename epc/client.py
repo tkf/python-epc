@@ -110,7 +110,11 @@ class EPCClient(EPCCore):
 
     def close(self):
         """Close connection."""
-        self.handler._recv_iter.stop()
+        try:
+            self.handler._recv_iter.stop()
+        except AttributeError:
+            # Do not fail to close even if the client is never used.
+            pass
 
     def _ignore(*_):
         """"Do nothing method for `EPCHandler`."""
