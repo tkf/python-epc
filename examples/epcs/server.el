@@ -19,4 +19,6 @@
    9999))
 
 (when noninteractive
-  (sleep-for 60))
+  ;; Start "event loop".
+  (loop repeat 600
+        do (sleep-for 0.1)))
