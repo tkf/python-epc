@@ -8,7 +8,14 @@
        (epc:define-method mngr 'echo 'identity)
        (epc:define-method
         mngr 'ping-pong
-        (lambda (&rest args) (epc:call-sync mngr 'pong args)))))
+        (lambda (&rest args)
+          (message "EPCS> PING-PONG got: %S" args)
+          (deferred:$
+            (epc:call-deferred mngr 'pong args)
+            (deferred:nextc it
+              (lambda (&rest args)
+                (message "EPCS> PONG returns: %S" args)
+                args)))))))
    9999))
 
 (when noninteractive
