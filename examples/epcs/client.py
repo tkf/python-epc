@@ -3,13 +3,15 @@ import logging
 from epc.client import EPCClient
 
 
-def run_client(address, port):
+def run_client(address, port, log, log_level):
     client = EPCClient((address, port))
 
-    handler = logging.StreamHandler()
-    handler.setLevel(logging.DEBUG)
-    client.logger.addHandler(handler)
-    client.logger.setLevel(logging.DEBUG)
+    if log:
+        level = getattr(logging, log_level.upper())
+        handler = logging.StreamHandler()
+        handler.setLevel(level)
+        client.logger.addHandler(handler)
+        client.logger.setLevel(level)
 
     @client.register_function
     def pong(*args):
@@ -37,6 +39,10 @@ def main(args=None):
         '--address', default='localhost')
     parser.add_argument(
         '--port', default=9999, type=int)
+    parser.add_argument(
+        '--log', default=False, action='store_true')
+    parser.add_argument(
+        '--log-level', default='DEBUG')
     ns = parser.parse_args(args)
     run_client(**vars(ns))
 
