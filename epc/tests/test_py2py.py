@@ -48,6 +48,22 @@ class TestEPCPy2Py(BaseTestCase):
         def pong_server(x):
             return self.server.clients[0].call_sync('echo', [x])
 
+        @self.server.register_function
+        def fib_server(x):
+            if x < 2:
+                return x
+            i = self.server.clients[0].call_sync('fib_client', [x - 1])
+            j = self.server.clients[0].call_sync('fib_client', [x - 2])
+            return i + j
+
+        @self.client.register_function
+        def fib_client(x):
+            if x < 2:
+                return x
+            i = self.client.call_sync('fib_server', [x - 1])
+            j = self.client.call_sync('fib_server', [x - 2])
+            return i + j
+
     def tearDown(self):
         self.client.close()
         self.server.shutdown()
@@ -90,3 +106,13 @@ class TestEPCPy2Py(BaseTestCase):
 
     def test_client_close_should_not_fail_even_if_not_used(self):
         pass
+
+    fibonacci = [0, 1, 1, 2, 3, 5, 8]
+
+    def test_client_fib(self):
+        for (i, f) in enumerate(self.fibonacci):
+            self.assert_client_return('fib_server', [i], f)
+
+    def test_server_fib(self):
+        for (i, f) in enumerate(self.fibonacci):
+            self.assert_server_return('fib_client', [i], f)
