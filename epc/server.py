@@ -56,7 +56,7 @@ class ReturnErrorCallerUnknown(CallerUnknown, ReturnError):
 
 class EPCClosed(Exception):
     """
-    Trying to send to/receive from a closed socket.
+    Trying to send to a closed socket.
     """
 
 
@@ -95,7 +95,7 @@ class EPCHandler(SocketServer.StreamRequestHandler):
                 # Calling read on closed socket raises
                 # AttributeError in 2.x and ValueError in 3.x.
                 # http://bugs.python.org/issue9177
-                raise EPCClosed
+                raise StopIteration
             else:
                 raise  # if not, just re-raise it.
 
