@@ -1,3 +1,7 @@
+import os
+
+import nose
+
 from ..client import EPCClient
 from ..server import ThreadingEPCServer
 from ..server import ReturnError
@@ -6,7 +10,25 @@ from ..py3compat import Queue
 from .utils import BaseTestCase
 
 
+TRAVIS = os.getenv('TRAVIS')
+
+
+def next_fib(x, fib):
+    if x < 2:
+        return x
+    return fib(x - 1) + fib(x - 2)
+
+
+def fib(x):
+    return next_fib(x, fib)
+
+
 class TestEPCPy2Py(BaseTestCase):
+
+    if TRAVIS:
+        timeout = 10
+    else:
+        timeout = 1
 
     def setUp(self):
         ThreadingEPCServer.allow_reuse_address = True
@@ -48,16 +70,30 @@ class TestEPCPy2Py(BaseTestCase):
         def pong_server(x):
             return self.server.clients[0].call_sync('echo', [x])
 
+        @self.server.register_function
+        def fib_server(x):
+            c = self.server.clients[0].call_sync
+            return next_fib(x, lambda x: c('fib_client', [x]))
+
+        @self.client.register_function
+        def fib_client(x):
+            c = self.client.call_sync
+            return next_fib(x, lambda x: c('fib_server', [x]))
+
     def tearDown(self):
         self.client.close()
         self.server.shutdown()
         self.server.server_close()
 
     def wait_until_client_is_connected(self):
-        self.client_queue.get(timeout=1)
+        if not self.client_ready:
+            self.client_queue.get(timeout=self.timeout)
+            self.client_ready = True
+
+    client_ready = False
 
     def assert_call_return(self, call, method, args, reply):
-        self.assertEqual(call(method, args, timeout=1), reply)
+        self.assertEqual(call(method, args, timeout=self.timeout), reply)
 
     def assert_client_return(self, method, args, reply):
         self.assert_call_return(self.client.call_sync, method, args, reply)
@@ -90,3 +126,27 @@ class TestEPCPy2Py(BaseTestCase):
 
     def test_client_close_should_not_fail_even_if_not_used(self):
         pass
+
+    fibonacci = list(map(fib, range(12)))
+    fibonacci_min = 2
+    """
+    The Fibonacci test must succeeds at least until this index.
+    """
+
+    def check_fib(self, assert_return, method):
+        try:
+            for (i, f) in enumerate(self.fibonacci):
+                assert_return(method, [i], f)
+        except Queue.Empty:
+            if i > self.fibonacci_min:
+                raise nose.SkipTest(
+                    "Test for {0} fails at {1} (> {2}), but it's OK."
+                    .format(method, i, self.fibonacci_min))
+            else:
+                raise   # not OK
+
+    def test_client_fib(self):
+        self.check_fib(self.assert_client_return, 'fib_server')
+
+    def test_server_fib(self):
+        self.check_fib(self.assert_server_return, 'fib_client')

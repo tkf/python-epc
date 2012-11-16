@@ -54,6 +54,12 @@ class ReturnErrorCallerUnknown(CallerUnknown, ReturnError):
     """
 
 
+class EPCClosed(Exception):
+    """
+    Trying to send to a closed socket.
+    """
+
+
 class EPCHandler(SocketServer.StreamRequestHandler):
 
     # These attribute are defined in `SocketServer.BaseRequestHandler`
@@ -111,7 +117,11 @@ class EPCHandler(SocketServer.StreamRequestHandler):
     @autolog('debug')
     def _send(self, *args):
         string = encode_message(*args)
-        self.wfile.write(string)
+        try:
+            self.wfile.write(string)
+        except (AttributeError, ValueError):
+            # See also: :meth:`_rfile_read_safely`
+            raise EPCClosed
 
     @autolog('debug')
     def handle(self):
@@ -134,7 +144,9 @@ class EPCHandler(SocketServer.StreamRequestHandler):
             if self.server.debugger:
                 traceback = sys.exc_info()[2]
                 self.server.debugger.post_mortem(traceback)
-            if isinstance(err, BaseRemoteError):  # do not send error back
+            if isinstance(err, (BaseRemoteError, EPCClosed)):
+                # BaseRemoteError: do not send error back
+                # EPCClosed: no exception from thread
                 return
             name = 'epc-error' if uid is undefined else 'return-error'
             self._send(name, uid, repr(err))
