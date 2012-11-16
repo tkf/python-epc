@@ -6,10 +6,8 @@ def run_client(address, port):
 
     @client.register_function
     def pong(*args):
-        print("PONG got {0}".format(args))
-        return args
-        # FIXME: calling echo here hangs!
-        # return client.call_sync('echo', args, timeout=1)
+        print("PONG sending {0}".format(args))
+        return client.call_sync('echo', args, timeout=1)
 
     print("Server provides these methods:")
     print(client.methods_sync())
