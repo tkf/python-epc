@@ -70,7 +70,11 @@ class TestEPCPy2Py(BaseTestCase):
         self.server.server_close()
 
     def wait_until_client_is_connected(self):
-        self.client_queue.get(timeout=1)
+        if not self.client_ready:
+            self.client_queue.get(timeout=1)
+            self.client_ready = True
+
+    client_ready = False
 
     def assert_call_return(self, call, method, args, reply):
         self.assertEqual(call(method, args, timeout=1), reply)
