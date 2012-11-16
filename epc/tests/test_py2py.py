@@ -6,6 +6,16 @@ from ..py3compat import Queue
 from .utils import BaseTestCase
 
 
+def next_fib(x, fib):
+    if x < 2:
+        return x
+    return fib(x - 1) + fib(x - 2)
+
+
+def fib(x):
+    return next_fib(x, fib)
+
+
 class TestEPCPy2Py(BaseTestCase):
 
     def setUp(self):
@@ -50,19 +60,13 @@ class TestEPCPy2Py(BaseTestCase):
 
         @self.server.register_function
         def fib_server(x):
-            if x < 2:
-                return x
-            i = self.server.clients[0].call_sync('fib_client', [x - 1])
-            j = self.server.clients[0].call_sync('fib_client', [x - 2])
-            return i + j
+            c = self.server.clients[0].call_sync
+            return next_fib(x, lambda x: c('fib_client', [x]))
 
         @self.client.register_function
         def fib_client(x):
-            if x < 2:
-                return x
-            i = self.client.call_sync('fib_server', [x - 1])
-            j = self.client.call_sync('fib_server', [x - 2])
-            return i + j
+            c = self.client.call_sync
+            return next_fib(x, lambda x: c('fib_server', [x]))
 
     def tearDown(self):
         self.client.close()
@@ -111,7 +115,7 @@ class TestEPCPy2Py(BaseTestCase):
     def test_client_close_should_not_fail_even_if_not_used(self):
         pass
 
-    fibonacci = [0, 1, 1, 2, 3, 5, 8]
+    fibonacci = list(map(fib, range(11)))
 
     def test_client_fib(self):
         for (i, f) in enumerate(self.fibonacci):
