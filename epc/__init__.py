@@ -1,7 +1,7 @@
 # [[[cog import cog; cog.outl('"""\n%s\n"""' % file('../README.rst').read())]]]
 """
-EPC (RPC stack for Emacs Lisp) server for Python
-================================================
+EPC (RPC stack for Emacs Lisp) for Python
+=========================================
 
 Links:
 
@@ -30,7 +30,7 @@ What is this?
 
 EPC is an RPC stack for Emacs Lisp and Python-EPC is its server side
 implementation in Python.  Using Python-EPC, you can easily call
-Emacs Lisp function from Python and Python function from Emacs.  For
+Emacs Lisp functions from Python and Python functions from Emacs.  For
 example, you can use Python GUI module to build widgets for Emacs
 (see `examples/gtk/server.py`_ for example).
 
@@ -54,17 +54,14 @@ Save the following code as ``my-server.py``.
 
    from epc.server import EPCServer
 
-   def echo_server(address='localhost', port=0):
-       server = EPCServer((address, port))
-       def echo(*a):
-           return a
-       server.register_function(echo)
-       return server
+   server = EPCServer((address, port))
 
-   if __name__ == '__main__':
-       server = echo_server()
-       server.print_port()
-       server.serve_forever()
+   @server.register_function
+   def echo(*a):
+       return a
+
+   server.print_port()
+   server.serve_forever()
 
 
 And then run the following code from Emacs.
