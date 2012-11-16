@@ -34,19 +34,19 @@ class TestEPCPy2Py(BaseTestCase):
 
         @self.server.register_function
         def ping_server(x):
-            return self.client.call_sync('pong_client', [x])
+            return self.server.clients[0].call_sync('pong_client', [x])
 
         @self.client.register_function
         def pong_client(x):
-            return self.server.clients[0].call_sync('echo', [x])
+            return self.client.call_sync('echo', [x])
 
         @self.client.register_function
         def ping_client(x):
-            return self.server.clients[0].call_sync('pong_server', [x])
+            return self.client.call_sync('pong_server', [x])
 
         @self.server.register_function
         def pong_server(x):
-            return self.client.call_sync('echo', [x])
+            return self.server.clients[0].call_sync('echo', [x])
 
     def tearDown(self):
         self.client.close()
