@@ -118,7 +118,10 @@ class TestEPCPy2Py(BaseTestCase):
         pass
 
     fibonacci = list(map(fib, range(12)))
-    fibonacci_min = 4
+    fibonacci_min = 2
+    """
+    The Fibonacci test must succeeds at least until this index.
+    """
 
     def check_fib(self, assert_return, method):
         try:
