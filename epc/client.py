@@ -50,7 +50,7 @@ class EPCClient(EPCCore):
 
     Also, you can initialize client and connect to the server by one line.
 
-    >>> client = EPCClient(('localhost', 0))                #doctest: +SKIP
+    >>> client = EPCClient(('localhost', 9999))             #doctest: +SKIP
 
     .. method:: call
 
@@ -67,7 +67,6 @@ class EPCClient(EPCCore):
     .. method:: methods_sync
 
        Alias of :meth:`epc.server.EPCHandler.methods_sync`.
-
 
     """
 

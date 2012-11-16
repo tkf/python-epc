@@ -1,5 +1,5 @@
-EPC (RPC stack for Emacs Lisp) server for Python
-================================================
+EPC (RPC stack for Emacs Lisp) for Python
+=========================================
 
 Links:
 
@@ -28,7 +28,7 @@ What is this?
 
 EPC is an RPC stack for Emacs Lisp and Python-EPC is its server side
 implementation in Python.  Using Python-EPC, you can easily call
-Emacs Lisp function from Python and Python function from Emacs.  For
+Emacs Lisp functions from Python and Python functions from Emacs.  For
 example, you can use Python GUI module to build widgets for Emacs
 (see `examples/gtk/server.py`_ for example).
 
