@@ -52,17 +52,14 @@ Save the following code as ``my-server.py``.
 
    from epc.server import EPCServer
 
-   def echo_server(address='localhost', port=0):
-       server = EPCServer((address, port))
-       def echo(*a):
-           return a
-       server.register_function(echo)
-       return server
+   server = EPCServer((address, port))
 
-   if __name__ == '__main__':
-       server = echo_server()
-       server.print_port()
-       server.serve_forever()
+   @server.register_function
+   def echo(*a):
+       return a
+
+   server.print_port()
+   server.serve_forever()
 
 
 And then run the following code from Emacs.
