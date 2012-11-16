@@ -1,3 +1,5 @@
+import os
+
 import nose
 
 from ..client import EPCClient
@@ -6,6 +8,9 @@ from ..server import ReturnError
 from ..utils import newthread
 from ..py3compat import Queue
 from .utils import BaseTestCase
+
+
+TRAVIS = os.getenv('TRAVIS')
 
 
 def next_fib(x, fib):
@@ -19,6 +24,11 @@ def fib(x):
 
 
 class TestEPCPy2Py(BaseTestCase):
+
+    if TRAVIS:
+        timeout = 10
+    else:
+        timeout = 1
 
     def setUp(self):
         ThreadingEPCServer.allow_reuse_address = True
@@ -77,13 +87,13 @@ class TestEPCPy2Py(BaseTestCase):
 
     def wait_until_client_is_connected(self):
         if not self.client_ready:
-            self.client_queue.get(timeout=1)
+            self.client_queue.get(timeout=self.timeout)
             self.client_ready = True
 
     client_ready = False
 
     def assert_call_return(self, call, method, args, reply):
-        self.assertEqual(call(method, args, timeout=1), reply)
+        self.assertEqual(call(method, args, timeout=self.timeout), reply)
 
     def assert_client_return(self, method, args, reply):
         self.assert_call_return(self.client.call_sync, method, args, reply)
