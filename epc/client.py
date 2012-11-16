@@ -1,9 +1,9 @@
 from .py3compat import Queue
 from .utils import ThreadedIterator, newthread
-from .server import EPCHandler, EPCCore
+from .server import ThreadingEPCHandler, EPCCore
 
 
-class EPCClientHandler(EPCHandler):
+class EPCClientHandler(ThreadingEPCHandler):
 
     # In BaseRequestHandler, everything happen in `.__init__()`.
     # Let's defer it to `.start()`.
@@ -13,17 +13,17 @@ class EPCClientHandler(EPCHandler):
         self._ready = Queue.Queue()
 
     def start(self):
-        EPCHandler.__init__(self, *self._args)
+        ThreadingEPCHandler.__init__(self, *self._args)
 
     def setup(self):
-        EPCHandler.setup(self)
+        ThreadingEPCHandler.setup(self)
         self._ready.put(True)
 
     def wait_until_ready(self):
         self._ready.get()
 
     def _recv(self):
-        self._recv_iter = ThreadedIterator(EPCHandler._recv(self))
+        self._recv_iter = ThreadedIterator(ThreadingEPCHandler._recv(self))
         return self._recv_iter
 
 

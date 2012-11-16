@@ -5,7 +5,7 @@ import itertools
 from sexpdata import Symbol, String
 
 from .py3compat import SocketServer
-from .utils import autolog, LockingDict
+from .utils import autolog, LockingDict, newthread
 from .core import encode_message, unpack_message, BlockingCallback
 
 
@@ -235,6 +235,12 @@ class EPCHandler(SocketServer.StreamRequestHandler):
         Blocking version of :meth:`methods`.  See also :meth:`call_sync`.
         """
         return self._blocking_request(self.methods, timeout)
+
+
+class ThreadingEPCHandler(EPCHandler):
+
+    def _handle(self, sexp):
+        newthread(self, target=EPCHandler._handle, args=(self, sexp)).start()
 
 
 class EPCClientManager:
@@ -472,6 +478,7 @@ class EPCServer(SocketServer.TCPServer, EPCClientManager,
 
 
 class ThreadingEPCServer(SocketServer.ThreadingMixIn, EPCServer):
+
     """
     Class :class:`EPCServer` mixed with :class:`SocketServer.ThreadingMixIn`.
 
@@ -483,6 +490,10 @@ class ThreadingEPCServer(SocketServer.ThreadingMixIn, EPCServer):
        https://github.com/tkf/python-epc/blob/master/examples/gtk/server.py
 
     """
+
+    def __init__(self, *args, **kwds):
+        kwds.update(RequestHandlerClass=ThreadingEPCHandler)
+        EPCServer.__init__(self, *args, **kwds)
 
 
 def echo_server(address='localhost', port=0):
