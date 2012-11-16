@@ -1,8 +1,15 @@
+import logging
+
 from epc.client import EPCClient
 
 
 def run_client(address, port):
     client = EPCClient((address, port))
+
+    handler = logging.StreamHandler()
+    handler.setLevel(logging.DEBUG)
+    client.logger.addHandler(handler)
+    client.logger.setLevel(logging.DEBUG)
 
     @client.register_function
     def pong(*args):
