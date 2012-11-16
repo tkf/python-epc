@@ -83,10 +83,10 @@ class TestClient(BaseTestCase):
         bc = BlockingCallback()
         getattr(self.client, name)(*args, **bc.cbs)
         self.fsock.append(self.next_reply.pop(0))  # reply comes after call!
-        return bc.result(timeout=1)
+        return bc.result(timeout=self.timeout)
 
     def sent_message(self):
-        raw = self.fsock.sent_message.get(timeout=1)
+        raw = self.fsock.sent_message.get(timeout=self.timeout)
         (name, uid, rest) = unpack_message(raw[6:])
         if name == 'call':
             rest[0] = rest[0].value()

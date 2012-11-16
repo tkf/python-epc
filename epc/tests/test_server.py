@@ -36,7 +36,7 @@ class BaseEPCServerTestCase(BaseTestCase):
         self.server.register_function(bad_method)
 
         self.client = socket.create_connection(self.server.server_address)
-        self.client.settimeout(0.1)
+        self.client.settimeout(self.timeout)
 
     def tearDown(self):
         self.client.close()

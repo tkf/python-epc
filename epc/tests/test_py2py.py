@@ -1,5 +1,3 @@
-import os
-
 import nose
 
 from ..client import EPCClient
@@ -8,9 +6,6 @@ from ..server import ReturnError
 from ..utils import newthread
 from ..py3compat import Queue
 from .utils import BaseTestCase
-
-
-TRAVIS = os.getenv('TRAVIS')
 
 
 def next_fib(x, fib):
@@ -57,11 +52,6 @@ class ThreadingPy2Py(object):
 
 
 class TestEPCPy2Py(ThreadingPy2Py, BaseTestCase):
-
-    if TRAVIS:
-        timeout = 10
-    else:
-        timeout = 1
 
     def setUp(self):
         ThreadingEPCServer.allow_reuse_address = True

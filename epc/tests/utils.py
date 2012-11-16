@@ -1,3 +1,5 @@
+import os
+
 import unittest
 from contextlib import contextmanager
 
@@ -16,6 +18,13 @@ def mockedattr(object, name, replace):
 
 
 class BaseTestCase(unittest.TestCase):
+
+    TRAVIS = os.getenv('TRAVIS')
+
+    if TRAVIS:
+        timeout = 10
+    else:
+        timeout = 1
 
     if not hasattr(unittest.TestCase, 'assertIsInstance'):
         def assertIsInstance(self, obj, cls, msg=None):
