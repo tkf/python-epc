@@ -117,10 +117,12 @@ class TestEPCPy2Py(BaseTestCase):
 
     fibonacci = list(map(fib, range(8)))
 
-    def test_client_fib(self):
+    def check_fib(self, assert_return, method):
         for (i, f) in enumerate(self.fibonacci):
-            self.assert_client_return('fib_server', [i], f)
+            assert_return(method, [i], f)
+
+    def test_client_fib(self):
+        self.check_fib(self.assert_client_return, 'fib_server')
 
     def test_server_fib(self):
-        for (i, f) in enumerate(self.fibonacci):
-            self.assert_server_return('fib_client', [i], f)
+        self.check_fib(self.assert_server_return, 'fib_client')
