@@ -125,7 +125,9 @@ class EPCHandler(SocketServer.StreamRequestHandler):
             (name, uid, args) = unpack_message(sexp)
             pyname = name.replace('-', '_')
             handler = getattr(self, '_handle_{0}'.format(pyname))
-            self._send(*handler(uid, *args))
+            reply = handler(uid, *args)
+            if reply is not None:
+                self._send(*reply)
         except Exception as err:
             if self.handle_error(err):
                 return
