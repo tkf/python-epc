@@ -23,15 +23,16 @@ def fib(x):
     return next_fib(x, fib)
 
 
-class TestEPCPy2Py(BaseTestCase):
+class ThreadingPy2Py(object):
 
-    if TRAVIS:
-        timeout = 10
-    else:
-        timeout = 1
+    """
+    A class to setup connected EPC server and client in one process.
 
-    def setUp(self):
-        ThreadingEPCServer.allow_reuse_address = True
+    This class is useful to use as a mix-in for test cases.
+
+    """
+
+    def setup_connection(self):
         self.server = ThreadingEPCServer(('localhost', 0))
         self.server.daemon_threads = True
         self.server_thread = newthread(self, target=self.server.serve_forever)
@@ -41,6 +42,30 @@ class TestEPCPy2Py(BaseTestCase):
         self.server.handle_client_connect = q.put
 
         self.client = EPCClient(self.server.server_address)
+
+    def teardown_connection(self):
+        self.client.close()
+        self.server.shutdown()
+        self.server.server_close()
+
+    def wait_until_client_is_connected(self):
+        if not self.client_ready:
+            self.client_queue.get(timeout=1)
+            self.client_ready = True
+
+    client_ready = False
+
+
+class TestEPCPy2Py(ThreadingPy2Py, BaseTestCase):
+
+    if TRAVIS:
+        timeout = 10
+    else:
+        timeout = 1
+
+    def setUp(self):
+        ThreadingEPCServer.allow_reuse_address = True
+        self.setup_connection()
 
         @self.client.register_function
         @self.server.register_function
@@ -81,16 +106,7 @@ class TestEPCPy2Py(BaseTestCase):
             return next_fib(x, lambda x: c('fib_server', [x]))
 
     def tearDown(self):
-        self.client.close()
-        self.server.shutdown()
-        self.server.server_close()
-
-    def wait_until_client_is_connected(self):
-        if not self.client_ready:
-            self.client_queue.get(timeout=self.timeout)
-            self.client_ready = True
-
-    client_ready = False
+        self.teardown_connection()
 
     def assert_call_return(self, call, method, args, reply):
         self.assertEqual(call(method, args, timeout=self.timeout), reply)
