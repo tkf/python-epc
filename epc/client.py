@@ -1,12 +1,9 @@
-import threading
-
 from .py3compat import Queue
-from .utils import ThreadedIterator
-from .core import BlockingCallback
-from .server import EPCHandler, EPCCore
+from .utils import ThreadedIterator, newthread
+from .server import ThreadingEPCHandler, EPCCore
 
 
-class EPCClientHandler(EPCHandler):
+class EPCClientHandler(ThreadingEPCHandler):
 
     # In BaseRequestHandler, everything happen in `.__init__()`.
     # Let's defer it to `.start()`.
@@ -16,17 +13,17 @@ class EPCClientHandler(EPCHandler):
         self._ready = Queue.Queue()
 
     def start(self):
-        EPCHandler.__init__(self, *self._args)
+        ThreadingEPCHandler.__init__(self, *self._args)
 
     def setup(self):
-        EPCHandler.setup(self)
+        ThreadingEPCHandler.setup(self)
         self._ready.put(True)
 
     def wait_until_ready(self):
         self._ready.get()
 
     def _recv(self):
-        self._recv_iter = ThreadedIterator(EPCHandler._recv(self))
+        self._recv_iter = ThreadedIterator(ThreadingEPCHandler._recv(self))
         return self._recv_iter
 
 
@@ -54,6 +51,23 @@ class EPCClient(EPCCore):
     Also, you can initialize client and connect to the server by one line.
 
     >>> client = EPCClient(('localhost', 0))                #doctest: +SKIP
+
+    .. method:: call
+
+       Alias of :meth:`epc.server.EPCHandler.call`.
+
+    .. method:: call_sync
+
+       Alias of :meth:`epc.server.EPCHandler.call_sync`.
+
+    .. method:: methods
+
+       Alias of :meth:`epc.server.EPCHandler.methods`.
+
+    .. method:: methods_sync
+
+       Alias of :meth:`epc.server.EPCHandler.methods_sync`.
+
 
     """
 
@@ -85,48 +99,24 @@ class EPCClient(EPCCore):
         self.handler = EPCClientHandler(self.socket, address, self)
 
         self.call = self.handler.call
+        self.call_sync = self.handler.call_sync
         self.methods = self.handler.methods
+        self.methods_sync = self.handler.methods_sync
 
-        self.handler_thread = threading.Thread(target=self.handler.start)
+        self.handler_thread = newthread(self, target=self.handler.start)
         self.handler_thread.daemon = self.thread_daemon
         self.handler_thread.start()
         self.handler.wait_until_ready()
 
     def close(self):
         """Close connection."""
-        self.handler._recv_iter.stop()
+        try:
+            self.handler._recv_iter.stop()
+        except AttributeError:
+            # Do not fail to close even if the client is never used.
+            pass
 
     def _ignore(*_):
         """"Do nothing method for `EPCHandler`."""
     add_client = _ignore
     remove_client = _ignore
-
-    @staticmethod
-    def _blocking_request(call, timeout, *args):
-        bc = BlockingCallback()
-        call(*args, **bc.cbs)
-        return bc.result(timeout=timeout)
-
-    def call_sync(self, name, args, timeout=None):
-        """
-        Blocking version of :meth:`call`.
-
-        :type    name: str
-        :arg     name: Remote function name to call.
-        :type    args: list
-        :arg     args: Arguments passed to the remote function.
-        :type timeout: int or None
-        :arg  timeout: Timeout in second.  None means no timeout.
-
-        If the called remote function raise an exception, this method
-        raise an exception.  If you give `timeout`, this method may
-        raise an `Empty` exception.
-
-        """
-        return self._blocking_request(self.call, timeout, name, args)
-
-    def methods_sync(self, timeout=None):
-        """
-        Blocking version of :meth:`methods`.  See also :meth:`call_sync`.
-        """
-        return self._blocking_request(self.methods, timeout)

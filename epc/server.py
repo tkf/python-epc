@@ -5,8 +5,8 @@ import itertools
 from sexpdata import Symbol, String
 
 from .py3compat import SocketServer
-from .utils import autolog, LockingDict
-from .core import encode_message, unpack_message
+from .utils import autolog, LockingDict, newthread
+from .core import encode_message, unpack_message, BlockingCallback
 
 
 _logger = logging.getLogger('epc.server')
@@ -71,8 +71,8 @@ class EPCHandler(SocketServer.StreamRequestHandler):
     @autolog('debug')
     def setup(self):
         SocketServer.StreamRequestHandler.setup(self)
-        self.server.add_client(self)
         self.callmanager = EPCCallManager()
+        self.server.add_client(self)
 
     @autolog('debug')
     def finish(self):
@@ -81,14 +81,26 @@ class EPCHandler(SocketServer.StreamRequestHandler):
         finally:
             self.server.remove_client(self)
 
+    def _rfile_read_safely(self, size):
+        try:
+            return self.rfile.read(size)
+        except (AttributeError, ValueError):
+            if self.rfile.closed:
+                # Calling read on closed socket raises
+                # AttributeError in 2.x and ValueError in 3.x.
+                # http://bugs.python.org/issue9177
+                raise StopIteration
+            else:
+                raise  # if not, just re-raise it.
+
     def _recv(self):
         while True:
             self.logger.debug('receiving...')
-            head = self.rfile.read(6)
+            head = self._rfile_read_safely(6)
             if not head:
                 return
             length = int(head, 16)
-            data = self.rfile.read(length)
+            data = self._rfile_read_safely(length)
             if len(data) < length:
                 raise ValueError('need {0}-length data; got {1}'
                                  .format(length, len(data)))
@@ -113,7 +125,9 @@ class EPCHandler(SocketServer.StreamRequestHandler):
             (name, uid, args) = unpack_message(sexp)
             pyname = name.replace('-', '_')
             handler = getattr(self, '_handle_{0}'.format(pyname))
-            self._send(*handler(uid, *args))
+            reply = handler(uid, *args)
+            if reply is not None:
+                self._send(*reply)
         except Exception as err:
             if self.handle_error(err):
                 return
@@ -193,6 +207,42 @@ class EPCHandler(SocketServer.StreamRequestHandler):
 
         """
         self.callmanager.methods(self, *args, **kwds)
+
+    @staticmethod
+    def _blocking_request(call, timeout, *args):
+        bc = BlockingCallback()
+        call(*args, **bc.cbs)
+        return bc.result(timeout=timeout)
+
+    def call_sync(self, name, args, timeout=None):
+        """
+        Blocking version of :meth:`call`.
+
+        :type    name: str
+        :arg     name: Remote function name to call.
+        :type    args: list
+        :arg     args: Arguments passed to the remote function.
+        :type timeout: int or None
+        :arg  timeout: Timeout in second.  None means no timeout.
+
+        If the called remote function raise an exception, this method
+        raise an exception.  If you give `timeout`, this method may
+        raise an `Empty` exception.
+
+        """
+        return self._blocking_request(self.call, timeout, name, args)
+
+    def methods_sync(self, timeout=None):
+        """
+        Blocking version of :meth:`methods`.  See also :meth:`call_sync`.
+        """
+        return self._blocking_request(self.methods, timeout)
+
+
+class ThreadingEPCHandler(EPCHandler):
+
+    def _handle(self, sexp):
+        newthread(self, target=EPCHandler._handle, args=(self, sexp)).start()
 
 
 class EPCClientManager:
@@ -430,6 +480,7 @@ class EPCServer(SocketServer.TCPServer, EPCClientManager,
 
 
 class ThreadingEPCServer(SocketServer.ThreadingMixIn, EPCServer):
+
     """
     Class :class:`EPCServer` mixed with :class:`SocketServer.ThreadingMixIn`.
 
@@ -441,6 +492,10 @@ class ThreadingEPCServer(SocketServer.ThreadingMixIn, EPCServer):
        https://github.com/tkf/python-epc/blob/master/examples/gtk/server.py
 
     """
+
+    def __init__(self, *args, **kwds):
+        kwds.update(RequestHandlerClass=ThreadingEPCHandler)
+        EPCServer.__init__(self, *args, **kwds)
 
 
 def echo_server(address='localhost', port=0):

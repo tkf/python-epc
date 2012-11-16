@@ -2,13 +2,13 @@
 
 import io
 import socket
-import threading
 
 from sexpdata import Symbol, loads
 
 from ..server import ThreadingEPCServer, \
     ReturnError, EPCError, ReturnErrorCallerUnknown, EPCErrorCallerUnknown, \
     CallerUnknown
+from ..utils import newthread
 from ..core import encode_string, encode_object
 from ..py3compat import PY3, utf8, Queue
 from .utils import mockedattr, BaseTestCase
@@ -18,9 +18,9 @@ class BaseEPCServerTestCase(BaseTestCase):
 
     def setUp(self):
         # See: http://stackoverflow.com/questions/7720953
+        ThreadingEPCServer.allow_reuse_address = True
         self.server = ThreadingEPCServer(('localhost', 0))
-        self.server_thread = threading.Thread(target=self.server.serve_forever)
-        self.server_thread.allow_reuse_address = True
+        self.server_thread = newthread(self, target=self.server.serve_forever)
         self.server_thread.start()
 
         def echo(*a):
