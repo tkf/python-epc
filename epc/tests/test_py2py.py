@@ -96,3 +96,6 @@ class TestEPCPy2Py(BaseTestCase):
     @skip(reason)
     def test_server_ping_pong(self):
         self.assert_server_return('ping_client', [55], [55])
+
+    def test_client_close_should_not_fail_even_if_not_used(self):
+        pass
