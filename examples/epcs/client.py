@@ -14,7 +14,7 @@ def run_client(address, port):
     @client.register_function
     def pong(*args):
         print("PONG sending {0}".format(args))
-        return client.call_sync('echo', args, timeout=1)
+        return client.call_sync('echo', [args], timeout=1)
 
     print("Server provides these methods:")
     print(client.methods_sync())
