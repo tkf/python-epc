@@ -3,7 +3,7 @@ from ..server import ThreadingEPCServer
 from ..server import ReturnError
 from ..utils import newthread
 from ..py3compat import Queue
-from .utils import BaseTestCase, skip
+from .utils import BaseTestCase
 
 
 class TestEPCPy2Py(BaseTestCase):
@@ -82,18 +82,9 @@ class TestEPCPy2Py(BaseTestCase):
         self.assertRaises(
             ReturnError, self.server.clients[0].call_sync, 'bad_method', [55])
 
-    reason = """
-    Using call_sync in return handler hangs, as EPCHandler.handle
-    loop cannot process the next message while waiting for call_sync
-    to finish.  This must be fixed by moving _handle_return/
-    return_error/epc_error in a different thread.
-    """
-
-    @skip(reason)
     def test_client_ping_pong(self):
         self.assert_client_return('ping_server', [55], [55])
 
-    @skip(reason)
     def test_server_ping_pong(self):
         self.assert_server_return('ping_client', [55], [55])
 
