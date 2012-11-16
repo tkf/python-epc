@@ -115,7 +115,7 @@ class TestEPCPy2Py(BaseTestCase):
     def test_client_close_should_not_fail_even_if_not_used(self):
         pass
 
-    fibonacci = list(map(fib, range(11)))
+    fibonacci = list(map(fib, range(8)))
 
     def test_client_fib(self):
         for (i, f) in enumerate(self.fibonacci):
