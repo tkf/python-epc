@@ -5,6 +5,9 @@ import functools
 import unittest
 from contextlib import contextmanager
 
+from ..py3compat import Queue
+from ..utils import newthread
+
 
 @contextmanager
 def mockedattr(object, name, replace):
@@ -61,3 +64,16 @@ def skip(reason):
                            .format(func.__name__, reason))
         return wrapper
     return decorator
+
+
+def post_mortem_in_thread(traceback):
+    """
+    `pdb.post_mortem` that can be used in a daemon thread.
+    """
+    import pdb
+    blocker = Queue.Queue()
+    thread = newthread(target=blocker.get)
+    thread.daemon = False
+    thread.start()
+    pdb.post_mortem(traceback)
+    blocker.put(None)
