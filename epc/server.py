@@ -178,6 +178,10 @@ class EPCHandler(SocketServer.StreamRequestHandler):
         """
         Handle error which is not handled by errback.
 
+        :type  err: Exception
+        :arg   err: An error not handled by other mechanisms.
+        :rtype: boolean
+
         Return True from this function means that error is properly
         handled, so the error is not sent to client.  Do not confuse
         this with :meth:`SocketServer.BaseServer.handle_error`.  This
