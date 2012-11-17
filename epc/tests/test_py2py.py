@@ -3,9 +3,9 @@ import nose
 from ..client import EPCClient
 from ..server import ThreadingEPCServer
 from ..server import ReturnError
-from ..utils import newthread
+from ..utils import newthread, callwith
 from ..py3compat import Queue
-from .utils import BaseTestCase, logging_to_stdout, callwith
+from .utils import BaseTestCase, logging_to_stdout
 
 
 def next_fib(x, fib):

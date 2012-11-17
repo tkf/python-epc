@@ -27,19 +27,6 @@ def logging_to_stdout(logger):
     return mockedattr(logger.handlers[0], 'stream', sys.stdout)
 
 
-def callwith(context_manager):
-    """
-    A decorator to wrap execution of function with a context manager.
-    """
-    def decorator(func):
-        @functools.wraps(func)
-        def wrapper(*args, **kwds):
-            with context_manager:
-                return func(*args, **kwds)
-        return wrapper
-    return decorator
-
-
 class BaseTestCase(unittest.TestCase):
 
     TRAVIS = os.getenv('TRAVIS')
