@@ -1,11 +1,12 @@
 import sys
 import logging
 import itertools
+import threading
 
 from sexpdata import Symbol, String
 
 from .py3compat import SocketServer
-from .utils import autolog, LockingDict, newthread
+from .utils import autolog, LockingDict, newthread, callwith
 from .core import encode_message, unpack_message, BlockingCallback
 
 
@@ -358,7 +359,9 @@ class EPCCallManager:
     def __init__(self):
         self.callbacks = self.Dict()
         counter = itertools.count(1)
-        self.get_uid = lambda: next(counter)
+        self.get_uid = callwith(threading.Lock())(lambda: next(counter))
+        # Wrapping by threading.Lock is useless for non-threading
+        # handler.  Probably it is better to make it optional.
 
     def call(self, handler, name, args=[], callback=None, errback=None):
         uid = self.get_uid()
