@@ -362,13 +362,13 @@ class EPCCallManager:
 
     def call(self, handler, name, args=[], callback=None, errback=None):
         uid = self.get_uid()
-        handler._send('call', uid, Symbol(name), args)
         self.callbacks[uid] = (callback, errback)
+        handler._send('call', uid, Symbol(name), args)
 
     def methods(self, handler, callback=None, errback=None):
         uid = self.get_uid()
-        handler._send('methods', uid)
         self.callbacks[uid] = (callback, errback)
+        handler._send('methods', uid)
 
     def handle_return(self, uid, reply):
         try:
