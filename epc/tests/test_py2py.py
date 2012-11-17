@@ -5,7 +5,7 @@ from ..server import ThreadingEPCServer
 from ..server import ReturnError
 from ..utils import newthread
 from ..py3compat import Queue
-from .utils import BaseTestCase
+from .utils import BaseTestCase, logging_to_stdout, callwith
 
 
 def next_fib(x, fib):
@@ -109,20 +109,23 @@ class TestEPCPy2Py(ThreadingPy2Py, BaseTestCase):
         self.assert_call_return(self.server.clients[0].call_sync,
                                 method, args, reply)
 
+    def check_bad_method(self, call_sync):
+        cm = logging_to_stdout(self.server.logger)
+        call_sync = callwith(cm)(call_sync)
+        self.assertRaises(ReturnError, call_sync, 'bad_method', [55])
+
     def test_client_calls_server_echo(self):
         self.assert_client_return('echo', [55], [55])
 
     def test_client_calls_server_bad_method(self):
-        self.assertRaises(
-            ReturnError, self.client.call_sync, 'bad_method', [55])
+        self.check_bad_method(self.client.call_sync)
 
     def test_server_calls_client_echo(self):
         self.assert_server_return('echo', [55], [55])
 
     def test_server_calls_client_bad_method(self):
         self.wait_until_client_is_connected()
-        self.assertRaises(
-            ReturnError, self.server.clients[0].call_sync, 'bad_method', [55])
+        self.check_bad_method(self.server.clients[0].call_sync)
 
     def test_client_ping_pong(self):
         self.assert_client_return('ping_server', [55], [55])
