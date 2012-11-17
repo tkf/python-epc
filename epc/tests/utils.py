@@ -1,4 +1,5 @@
 import os
+import sys
 
 import unittest
 from contextlib import contextmanager
@@ -15,6 +16,11 @@ def mockedattr(object, name, replace):
         yield
     finally:
         setattr(object, name, original)
+
+
+def logging_to_stdout(logger):
+    # it assumes that 0-th hander is the only one stream handler...
+    return mockedattr(logger.handlers[0], 'stream', sys.stdout)
 
 
 class BaseTestCase(unittest.TestCase):

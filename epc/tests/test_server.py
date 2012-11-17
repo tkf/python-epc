@@ -2,6 +2,7 @@
 
 import io
 import socket
+from contextlib import nested
 
 from sexpdata import Symbol, loads
 
@@ -11,7 +12,7 @@ from ..server import ThreadingEPCServer, \
 from ..utils import newthread
 from ..core import encode_string, encode_object
 from ..py3compat import PY3, utf8, Queue
-from .utils import mockedattr, BaseTestCase
+from .utils import mockedattr, logging_to_stdout, BaseTestCase
 
 
 class BaseEPCServerTestCase(BaseTestCase):
@@ -68,15 +69,17 @@ class TestEPCServerRequestHandling(BaseEPCServerTestCase):
         self.check_echo()
 
     def test_error_in_method(self):
-        self.client_send('(call 2 bad_method nil)')
-        result = self.client.recv(1024)
+        with logging_to_stdout(self.server.logger):
+            self.client_send('(call 2 bad_method nil)')
+            result = self.client.recv(1024)
         expected = encode_object([
             Symbol('return-error'), 2, repr(self.error_to_throw)])
         self.assertEqual(result, expected)
 
     def test_no_such_method(self):
-        self.client_send('(call 3 no_such_method nil)')
-        reply = self.receive_message()
+        with logging_to_stdout(self.server.logger):
+            self.client_send('(call 3 no_such_method nil)')
+            reply = self.receive_message()
         self.assertEqual(reply[0], Symbol('epc-error'))
         self.assertEqual(reply[1], 3)
         assert 'No such method' in reply[2]
@@ -103,8 +106,9 @@ class TestEPCServerRequestHandling(BaseEPCServerTestCase):
                          result)
 
     def test_invalid_sexp(self):
-        self.client_send('(((invalid sexp!')
-        reply = self.receive_message()
+        with logging_to_stdout(self.server.logger):
+            self.client_send('(((invalid sexp!')
+            reply = self.receive_message()
         self.assertEqual(reply[0].value(), Symbol('epc-error').value())
         self.assertEqual(reply[1], [])  # uid
         assert 'Not enough closing brackets.' in reply[2]
@@ -112,8 +116,9 @@ class TestEPCServerRequestHandling(BaseEPCServerTestCase):
     def check_caller_unkown(self, message, eclass, eargs):
         self.check_echo()  # to establish connection to client
         called_with = Queue.Queue()
-        with mockedattr(self.server.clients[0],
-                        'handle_error', called_with.put):
+        with nested(mockedattr(self.server.clients[0],
+                               'handle_error', called_with.put),
+                    logging_to_stdout(self.server.logger)):
             self.client_send(message)
             error = called_with.get(True, 1)
         self.assertIsInstance(error, eclass)
@@ -200,12 +205,13 @@ class TestEPCServerCallClient(BaseEPCServerTestCase):
                                    message=utf8("message")):
         self.handler.call('dummy', [55])  # no callbacks!
         uid = self.check_call_client_dummy_method()
-        self.client_send_error(ename, uid, message)
-        try:
-            result = self.client.recv(1024)
-            self.assertEqual(result, '')  # nothing goes to client
-        except socket.timeout:
-            pass
+        with logging_to_stdout(self.server.logger):
+            self.client_send_error(ename, uid, message)
+            try:
+                result = self.client.recv(1024)
+                self.assertEqual(result, '')  # nothing goes to client
+            except socket.timeout:
+                pass
 
     def test_dont_send_return_error_back(self):
         self.check_dont_send_error_back('return-error', ReturnError)
