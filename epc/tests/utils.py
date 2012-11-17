@@ -69,6 +69,14 @@ def skip(reason):
 def post_mortem_in_thread(traceback):
     """
     `pdb.post_mortem` that can be used in a daemon thread.
+
+    Put the following in the `except`-block::
+
+        import sys
+        from epc.tests.utils import post_mortem_in_thread
+        exc_info = sys.exc_info()
+        post_mortem_in_thread(exc_info[2])
+
     """
     import pdb
     blocker = Queue.Queue()
