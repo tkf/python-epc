@@ -39,6 +39,7 @@ class BaseEPCServerTestCase(BaseTestCase):
         self.client.settimeout(self.timeout)
 
     def tearDown(self):
+        self.client.shutdown(socket.SHUT_RDWR)
         self.client.close()
         self.server.shutdown()
         self.server.server_close()
