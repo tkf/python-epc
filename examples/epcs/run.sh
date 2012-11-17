@@ -7,4 +7,4 @@ trap 'kill -TERM '$epid EXIT
 echo "Emacs is running at $epid"
 
 sleep 0.1
-python examples/epcs/client.py
+python examples/epcs/client.py "$@"
