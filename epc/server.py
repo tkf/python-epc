@@ -144,10 +144,6 @@ class EPCHandler(SocketServer.StreamRequestHandler):
             if self.server.debugger:
                 traceback = sys.exc_info()[2]
                 self.server.debugger.post_mortem(traceback)
-            if isinstance(err, (BaseRemoteError, EPCClosed)):
-                # BaseRemoteError: do not send error back
-                # EPCClosed: no exception from thread
-                return
             name = 'epc-error' if uid is undefined else 'return-error'
             self._send(name, uid, repr(err))
 
@@ -186,10 +182,20 @@ class EPCHandler(SocketServer.StreamRequestHandler):
         handled, so the error is not sent to client.  Do not confuse
         this with :meth:`SocketServer.BaseServer.handle_error`.  This
         method is for handling error for each client, not for entire
-        server.  Default implementation does nothing.  Therefore,
-        error occurs in this server is sent to client always.
+        server.  Default implementation logs the error and returns
+        True if the error is coming from remote [#]_ or returns False
+        otherwise. Therefore, only the error occurs in this handler
+        class is sent to remote.
+
+        .. [#] More specifically, it returns True if `err` is an
+           instance of :class:`BaseRemoteError` or :class:`EPCClosed`.
 
         """
+        self.logger.error(repr(err))
+        if isinstance(err, (BaseRemoteError, EPCClosed)):
+            # BaseRemoteError: do not send error back
+            # EPCClosed: no exception from thread
+            return True
 
     def call(self, name, *args, **kwds):
         """
