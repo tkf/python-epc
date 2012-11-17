@@ -92,6 +92,10 @@ class LockingDict(dict):
         super(LockingDict, self).__init__(*args, **kwds)
         self._lock = threading.Lock()
 
+    def __getitem__(self, key):
+        with self._lock:
+            super(LockingDict, self).__getitem__(key)
+
     def __setitem__(self, key, value):
         with self._lock:
             super(LockingDict, self).__setitem__(key, value)
