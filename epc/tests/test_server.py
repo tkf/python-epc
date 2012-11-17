@@ -2,7 +2,6 @@
 
 import io
 import socket
-from contextlib import nested
 
 from sexpdata import Symbol, loads
 
@@ -11,7 +10,7 @@ from ..server import ThreadingEPCServer, \
     CallerUnknown
 from ..utils import newthread
 from ..core import encode_string, encode_object
-from ..py3compat import PY3, utf8, Queue
+from ..py3compat import PY3, utf8, Queue, nested
 from .utils import mockedattr, logging_to_stdout, BaseTestCase
 
 
