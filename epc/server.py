@@ -9,7 +9,17 @@ from .utils import autolog, LockingDict, newthread
 from .core import encode_message, unpack_message, BlockingCallback
 
 
-_logger = logging.getLogger('epc.server')
+def _get_logger():
+    """
+    Generate a logger with a stream handler.
+    """
+    logger = logging.getLogger('epc')
+    hndlr = logging.StreamHandler()
+    hndlr.setLevel(logging.INFO)
+    hndlr.setFormatter(logging.Formatter(logging.BASIC_FORMAT))
+    logger.addHandler(hndlr)
+    return logger
+_logger = _get_logger()
 
 
 def setuplogfile(logger=_logger, filename='python-epc.log'):
