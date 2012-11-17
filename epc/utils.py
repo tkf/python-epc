@@ -39,14 +39,14 @@ def autolog(level):
     return wrapper
 
 
-def newname(template="EPCThread-{0}"):
+def newname(template):
     global _counter
     _counter = _counter + 1
     return template.format(_counter)
 _counter = 0
 
 
-def newthread(template, **kwds):
+def newthread(template="EPCThread-{0}", **kwds):
     """
     Instantiate :class:`threading.Thread` with an appropriate name.
     """
@@ -91,6 +91,10 @@ class LockingDict(dict):
     def __init__(self, *args, **kwds):
         super(LockingDict, self).__init__(*args, **kwds)
         self._lock = threading.Lock()
+
+    def __getitem__(self, key):
+        with self._lock:
+            super(LockingDict, self).__getitem__(key)
 
     def __setitem__(self, key, value):
         with self._lock:
