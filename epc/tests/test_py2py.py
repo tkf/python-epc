@@ -1,3 +1,4 @@
+import os
 import nose
 
 from ..client import EPCClient
@@ -129,11 +130,22 @@ class TestEPCPy2Py(ThreadingPy2Py, BaseTestCase):
         self.wait_until_client_is_connected()
         self.check_bad_method(self.server.clients[0].call_sync)
 
-    max_message_length = int('f' * 6, 16)  # 16MB
+    max_message_limit = int('f' * 6, 16) + 1  # 16MB
+    large_data_limit = max_message_limit \
+        / float(os.getenv('PYEPC_TEST_LARGE_DATA_DISCOUNT', '128'))
+    large_data_limit = int(large_data_limit)
+    """
+    Environment variable PYEPC_TEST_LARGE_DATA_DISCOUNT controls
+    how large "large data" must be.  Default is ``2 ** 7`` times
+    smaller than the maximum message length (16 MB).  Setting
+    it to 1 must *not* fail.  However, it takes long time to finish
+    the test (typically 100 sec when I tried).  Setting this value
+    to less than one (e.g., 0.9) *must* fail the tests.
+    """
 
     def check_large_data(self, assert_return):
         margin = 100  # for parenthesis, "call", uid, etc.
-        data = "x" * (self.max_message_length - margin)
+        data = "x" * (self.large_data_limit - margin)
         timeout = self.timeout * 100
         assert_return('echo', [data], [data], timeout=timeout)
 
