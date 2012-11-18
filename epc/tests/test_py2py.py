@@ -129,6 +129,20 @@ class TestEPCPy2Py(ThreadingPy2Py, BaseTestCase):
         self.wait_until_client_is_connected()
         self.check_bad_method(self.server.clients[0].call_sync)
 
+    max_message_length = int('f' * 6, 16)  # 16MB
+
+    def check_large_data(self, assert_return):
+        margin = 100  # for parenthesis, "call", uid, etc.
+        data = "x" * (self.max_message_length - margin)
+        timeout = self.timeout * 100
+        assert_return('echo', [data], [data], timeout=timeout)
+
+    def test_client_sends_large_data(self):
+        self.check_large_data(self.assert_client_return)
+
+    def test_server_sends_large_data(self):
+        self.check_large_data(self.assert_server_return)
+
     def test_client_ping_pong(self):
         self.assert_client_return('ping_server', [55], [55])
 
