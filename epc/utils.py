@@ -86,24 +86,38 @@ class ThreadedIterator(object):
     next = __next__  # for PY2
 
 
+def callwith(context_manager):
+    """
+    A decorator to wrap execution of function with a context manager.
+    """
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwds):
+            with context_manager:
+                return func(*args, **kwds)
+        return wrapper
+    return decorator
+
+
+def _define_thread_safe_methods(methodnames, lockname):
+    def define(cls, name):
+        def wrapper(self, *args, **kwds):
+            with getattr(self, lockname):
+                return method(self, *args, **kwds)
+        method = getattr(cls, name)
+        setattr(cls, name, wrapper)
+
+    def decorator(cls):
+        for name in methodnames:
+            define(cls, name)
+        return cls
+    return decorator
+
+
+@_define_thread_safe_methods(
+    ['__getitem__', '__setitem__', '__delitem__', 'pop'], '_lock')
 class LockingDict(dict):
 
     def __init__(self, *args, **kwds):
         super(LockingDict, self).__init__(*args, **kwds)
         self._lock = threading.Lock()
-
-    def __getitem__(self, key):
-        with self._lock:
-            super(LockingDict, self).__getitem__(key)
-
-    def __setitem__(self, key, value):
-        with self._lock:
-            super(LockingDict, self).__setitem__(key, value)
-
-    def __delitem__(self, key):
-        with self._lock:
-            super(LockingDict, self).__delitem__(key)
-
-    def pop(self, *args):
-        with self._lock:
-            return super(LockingDict, self).pop(*args)
