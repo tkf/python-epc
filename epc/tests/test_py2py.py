@@ -1,3 +1,4 @@
+import os
 import nose
 
 from ..client import EPCClient
@@ -98,16 +99,18 @@ class TestEPCPy2Py(ThreadingPy2Py, BaseTestCase):
     def tearDown(self):
         self.teardown_connection()
 
-    def assert_call_return(self, call, method, args, reply):
-        self.assertEqual(call(method, args, timeout=self.timeout), reply)
+    def assert_call_return(self, call, method, args, reply, **kwds):
+        timeout = kwds.get('timeout', self.timeout)
+        self.assertEqual(call(method, args, timeout=timeout), reply)
 
-    def assert_client_return(self, method, args, reply):
-        self.assert_call_return(self.client.call_sync, method, args, reply)
+    def assert_client_return(self, method, args, reply, **kwds):
+        self.assert_call_return(self.client.call_sync,
+                                method, args, reply, **kwds)
 
-    def assert_server_return(self, method, args, reply):
+    def assert_server_return(self, method, args, reply, **kwds):
         self.wait_until_client_is_connected()
         self.assert_call_return(self.server.clients[0].call_sync,
-                                method, args, reply)
+                                method, args, reply, **kwds)
 
     def check_bad_method(self, call_sync):
         cm = logging_to_stdout(self.server.logger)
@@ -126,6 +129,31 @@ class TestEPCPy2Py(ThreadingPy2Py, BaseTestCase):
     def test_server_calls_client_bad_method(self):
         self.wait_until_client_is_connected()
         self.check_bad_method(self.server.clients[0].call_sync)
+
+    max_message_limit = int('f' * 6, 16) + 1  # 16MB
+    large_data_limit = max_message_limit \
+        / float(os.getenv('PYEPC_TEST_LARGE_DATA_DISCOUNT', '128'))
+    large_data_limit = int(large_data_limit)
+    """
+    Environment variable PYEPC_TEST_LARGE_DATA_DISCOUNT controls
+    how large "large data" must be.  Default is ``2 ** 7`` times
+    smaller than the maximum message length (16 MB).  Setting
+    it to 1 must *not* fail.  However, it takes long time to finish
+    the test (typically 100 sec when I tried).  Setting this value
+    to less than one (e.g., 0.9) *must* fail the tests.
+    """
+
+    def check_large_data(self, assert_return):
+        margin = 100  # for parenthesis, "call", uid, etc.
+        data = "x" * (self.large_data_limit - margin)
+        timeout = self.timeout * 100
+        assert_return('echo', [data], [data], timeout=timeout)
+
+    def test_client_sends_large_data(self):
+        self.check_large_data(self.assert_client_return)
+
+    def test_server_sends_large_data(self):
+        self.check_large_data(self.assert_server_return)
 
     def test_client_ping_pong(self):
         self.assert_client_return('ping_server', [55], [55])
