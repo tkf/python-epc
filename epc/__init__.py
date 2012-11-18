@@ -54,7 +54,7 @@ Save the following code as ``my-server.py``.
 
    from epc.server import EPCServer
 
-   server = EPCServer((address, port))
+   server = EPCServer(('localhost', 0))
 
    @server.register_function
    def echo(*a):
