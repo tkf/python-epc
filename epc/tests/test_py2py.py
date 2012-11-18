@@ -98,16 +98,18 @@ class TestEPCPy2Py(ThreadingPy2Py, BaseTestCase):
     def tearDown(self):
         self.teardown_connection()
 
-    def assert_call_return(self, call, method, args, reply):
-        self.assertEqual(call(method, args, timeout=self.timeout), reply)
+    def assert_call_return(self, call, method, args, reply, **kwds):
+        timeout = kwds.get('timeout', self.timeout)
+        self.assertEqual(call(method, args, timeout=timeout), reply)
 
-    def assert_client_return(self, method, args, reply):
-        self.assert_call_return(self.client.call_sync, method, args, reply)
+    def assert_client_return(self, method, args, reply, **kwds):
+        self.assert_call_return(self.client.call_sync,
+                                method, args, reply, **kwds)
 
-    def assert_server_return(self, method, args, reply):
+    def assert_server_return(self, method, args, reply, **kwds):
         self.wait_until_client_is_connected()
         self.assert_call_return(self.server.clients[0].call_sync,
-                                method, args, reply)
+                                method, args, reply, **kwds)
 
     def check_bad_method(self, call_sync):
         cm = logging_to_stdout(self.server.logger)
