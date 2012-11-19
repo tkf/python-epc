@@ -14,6 +14,33 @@ from ..py3compat import PY3, utf8, Queue, nested
 from .utils import mockedattr, logging_to_stdout, BaseTestCase
 
 
+class TestEPCServerMisc(BaseTestCase):
+
+    """
+    Test that can be done without client.
+    """
+
+    def setUp(self):
+        # See: http://stackoverflow.com/questions/7720953
+        ThreadingEPCServer.allow_reuse_address = True
+        self.server = ThreadingEPCServer(('localhost', 0))
+        self.server_thread = newthread(self, target=self.server.serve_forever)
+        self.server_thread.start()
+
+    def tearDown(self):
+        self.server.shutdown()
+        self.server.server_close()
+
+    def test_print_port(self):
+        if PY3:
+            stream = io.StringIO()
+        else:
+            stream = io.BytesIO()
+        self.server.print_port(stream)
+        self.assertEqual(stream.getvalue(),
+                         '{0}\n'.format(self.server.server_address[1]))
+
+
 class BaseEPCServerTestCase(BaseTestCase):
 
     def setUp(self):
@@ -137,15 +164,6 @@ class TestEPCServerRequestHandling(BaseEPCServerTestCase):
         self.check_caller_unkown(
             '(epc-error nil "message")',
             EPCErrorCallerUnknown, ('message',))
-
-    def test_print_port(self):
-        if PY3:
-            stream = io.StringIO()
-        else:
-            stream = io.BytesIO()
-        self.server.print_port(stream)
-        self.assertEqual(stream.getvalue(),
-                         '{0}\n'.format(self.server.server_address[1]))
 
 
 class TestEPCServerCallClient(BaseEPCServerTestCase):
