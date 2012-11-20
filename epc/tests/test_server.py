@@ -180,6 +180,9 @@ class TestEPCServerRequestHandling(BaseEPCServerTestCase):
         self.check_invalid_call(
             '(call {0} echo "value" "extra" "value")'.format)
 
+    def test_invalid_methods_too_many_arguments(self):
+        self.check_invalid_call('(methods {0} "extra value")'.format)
+
 
 class TestEPCServerCallClient(BaseEPCServerTestCase):
 
