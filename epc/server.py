@@ -180,10 +180,10 @@ class EPCHandler(SocketServer.StreamRequestHandler):
     def _handle_return(self, uid, reply):
         self.callmanager.handle_return(uid, reply)
 
-    def _handle_return_error(self, uid, reply):
+    def _handle_return_error(self, uid, reply=None, *_):
         self.callmanager.handle_return_error(uid, reply)
 
-    def _handle_epc_error(self, uid, reply):
+    def _handle_epc_error(self, uid, reply=None, *_):
         self.callmanager.handle_epc_error(uid, reply)
 
     _epc_error_template = \
