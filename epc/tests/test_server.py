@@ -258,3 +258,10 @@ class TestEPCServerCallClient(BaseEPCServerTestCase):
         self.check_invalid_reply(
             '(return-error {0} "value" "extra" "value")'.format,
             ReturnError)
+
+    def test_invalid_epc_error_not_enough_arguments(self):
+        self.check_invalid_reply('(epc-error {0})'.format)
+
+    def test_invalid_epc_error_too_many_arguments(self):
+        self.check_invalid_reply(
+            '(epc-error {0} "value" "extra" "value")'.format)
