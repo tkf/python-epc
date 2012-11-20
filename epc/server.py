@@ -189,9 +189,6 @@ class EPCHandler(SocketServer.StreamRequestHandler):
     _epc_error_template = \
         "(%s %d ...): Got %s arguments in the reply: %r"
 
-    def _extra_argument_error(self, name, uid, reply, adjective):
-        return self._epc_error_template.format(name, uid, reply, adjective)
-
     def _validate_call(self, uid, args, num_expect=2, name='call'):
         len_args = len(args)
         if len_args == num_expect:
@@ -208,7 +205,7 @@ class EPCHandler(SocketServer.StreamRequestHandler):
 
     def _validate_return(self, uid, args):
         len_args = len(args)
-        error = lambda x: self._extra_argument_error('return', uid, args, x)
+        error = lambda x: self._epc_error_template % ('return', uid, x, args)
         if len_args == 0:
             message = error('not enough')
         elif len_args > 1:
@@ -227,8 +224,8 @@ class EPCHandler(SocketServer.StreamRequestHandler):
 
     def _log_extra_argument_error(self, name, uid, args):
         if len(args) > 1:
-            self.logger.error(self._extra_argument_error(
-                'return-error', uid, args, 'too many'))
+            self.logger.error(self._epc_error_template,
+                              'return-error', uid, 'too many', args)
 
     def handle_error(self, err):
         """
