@@ -236,13 +236,13 @@ class TestEPCServerCallClient(BaseEPCServerTestCase):
     def test_dont_send_epc_error_back(self):
         self.check_dont_send_error_back('epc-error', EPCError)
 
-    def check_invalid_reply(self, make_reply):
+    def check_invalid_reply(self, make_reply, should_raise=EPCError):
         bc = BlockingCallback()
         self.handler.call('dummy', [55], **bc.cbs)
         uid = self.check_call_client_dummy_method()
         with logging_to_stdout(self.server.logger):
             self.client_send(make_reply(uid))
-            self.assertRaises(EPCError, bc.result, timeout=self.timeout)
+            self.assertRaises(should_raise, bc.result, timeout=self.timeout)
 
     def test_invalid_return_not_enough_arguments(self):
         self.check_invalid_reply('(return {0})'.format)
@@ -250,3 +250,11 @@ class TestEPCServerCallClient(BaseEPCServerTestCase):
     def test_invalid_return_too_many_arguments(self):
         self.check_invalid_reply(
             '(return {0} "value" "extra" "value")'.format)
+
+    def test_invalid_return_error_not_enough_arguments(self):
+        self.check_invalid_reply('(return-error {0})'.format, ReturnError)
+
+    def test_invalid_return_error_too_many_arguments(self):
+        self.check_invalid_reply(
+            '(return-error {0} "value" "extra" "value")'.format,
+            ReturnError)
