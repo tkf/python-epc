@@ -145,6 +145,7 @@ class EPCHandler(SocketServer.StreamRequestHandler):
         try:
             (name, uid, args) = unpack_message(sexp)
             pyname = name.replace('-', '_')
+            getattr(self, '_validate_{0}'.format(pyname))(uid, args)
             handler = getattr(self, '_handle_{0}'.format(pyname))
             reply = handler(uid, *args)
             if reply is not None:
@@ -179,11 +180,52 @@ class EPCHandler(SocketServer.StreamRequestHandler):
     def _handle_return(self, uid, reply):
         self.callmanager.handle_return(uid, reply)
 
-    def _handle_return_error(self, uid, reply):
+    def _handle_return_error(self, uid, reply=None, *_):
         self.callmanager.handle_return_error(uid, reply)
 
-    def _handle_epc_error(self, uid, reply):
+    def _handle_epc_error(self, uid, reply=None, *_):
         self.callmanager.handle_epc_error(uid, reply)
+
+    _epc_error_template = \
+        "(%s %d ...): Got %s arguments in the reply: %r"
+
+    def _validate_call(self, uid, args, num_expect=2, name='call'):
+        len_args = len(args)
+        if len_args == num_expect:
+            return
+        elif len_args < num_expect:
+            message = 'Not enough arguments {0!r}'.format(args)
+        else:
+            message = 'Too many arguments {0!r}'.format(args)
+        self._send("epc-error", uid, message)
+        raise EPCError('({0} {1} ...): {2}'.format(name, uid, message))
+
+    def _validate_methods(self, uid, args):
+        self._validate_call(uid, args, 0, 'methods')
+
+    def _validate_return(self, uid, args):
+        len_args = len(args)
+        error = lambda x: self._epc_error_template % ('return', uid, x, args)
+        if len_args == 0:
+            message = error('not enough')
+        elif len_args > 1:
+            message = error('too many')
+        else:
+            return
+        self.logger.error(message)
+        self._handle_epc_error(uid, message)
+        raise EPCError(message)
+
+    def _validate_return_error(self, uid, args):
+        self._log_extra_argument_error('return-error', uid, args)
+
+    def _validate_epc_error(self, uid, args):
+        self._log_extra_argument_error('epc-error', uid, args)
+
+    def _log_extra_argument_error(self, name, uid, args):
+        if len(args) > 1:
+            self.logger.error(self._epc_error_template,
+                              'return-error', uid, 'too many', args)
 
     def handle_error(self, err):
         """
