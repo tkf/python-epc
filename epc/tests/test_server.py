@@ -9,7 +9,7 @@ from ..server import ThreadingEPCServer, \
     ReturnError, EPCError, ReturnErrorCallerUnknown, EPCErrorCallerUnknown, \
     CallerUnknown
 from ..utils import newthread
-from ..core import encode_string, encode_object
+from ..core import encode_string, encode_object, BlockingCallback
 from ..py3compat import PY3, utf8, Queue, nested
 from .utils import mockedattr, logging_to_stdout, BaseTestCase
 
@@ -235,3 +235,18 @@ class TestEPCServerCallClient(BaseEPCServerTestCase):
 
     def test_dont_send_epc_error_back(self):
         self.check_dont_send_error_back('epc-error', EPCError)
+
+    def check_invalid_reply(self, make_reply):
+        bc = BlockingCallback()
+        self.handler.call('dummy', [55], **bc.cbs)
+        uid = self.check_call_client_dummy_method()
+        with logging_to_stdout(self.server.logger):
+            self.client_send(make_reply(uid))
+            self.assertRaises(EPCError, bc.result, timeout=self.timeout)
+
+    def test_invalid_return_not_enough_arguments(self):
+        self.check_invalid_reply('(return {0})'.format)
+
+    def test_invalid_return_too_many_arguments(self):
+        self.check_invalid_reply(
+            '(return {0} "value" "extra" "value")'.format)
