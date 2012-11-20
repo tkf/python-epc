@@ -165,6 +165,21 @@ class TestEPCServerRequestHandling(BaseEPCServerTestCase):
             '(epc-error nil "message")',
             EPCErrorCallerUnknown, ('message',))
 
+    def check_invalid_call(self, make_call):
+        uid = 1
+        with logging_to_stdout(self.server.logger):
+            self.client_send(make_call(uid))
+            reply = self.receive_message()
+        self.assertEqual(reply[0], Symbol('epc-error'))
+        self.assertEqual(reply[1], uid)
+
+    def test_invalid_call_not_enough_arguments(self):
+        self.check_invalid_call('(call {0} echo)'.format)
+
+    def test_invalid_call_too_many_arguments(self):
+        self.check_invalid_call(
+            '(call {0} echo "value" "extra" "value")'.format)
+
 
 class TestEPCServerCallClient(BaseEPCServerTestCase):
 
