@@ -167,6 +167,10 @@ class TestEPCServerRequestHandling(BaseEPCServerTestCase):
 
     def check_invalid_call(self, make_call):
 
+        # These are not necessary for the actual test, but rather
+        # to make sure that the server stays in the context of
+        # `logging_to_stdout` until the error is handled.  See
+        # `called_with.get` below.
         def handle_error(err):
             self.assertTrue(orig_handle_error(err))
             called_with.put(err)
@@ -176,12 +180,13 @@ class TestEPCServerRequestHandling(BaseEPCServerTestCase):
         orig_handle_error = handler.handle_error
         called_with = Queue.Queue()
 
+        # Here comes the actual test:
         uid = 1
         with nested(logging_to_stdout(self.server.logger),
                     mockedattr(handler, 'handle_error', handle_error)):
             self.client_send(make_call(uid))
             reply = self.receive_message()
-            called_with.get(timeout=1)
+            called_with.get(timeout=1)  # wait until the error got handled
         self.assertEqual(reply[0], Symbol('epc-error'))
         self.assertEqual(reply[1], uid)
 
