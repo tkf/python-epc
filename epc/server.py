@@ -192,11 +192,19 @@ class EPCHandler(SocketServer.StreamRequestHandler):
     def _extra_argument_error(self, name, uid, reply, adjective):
         return self._epc_error_template.format(name, uid, reply, adjective)
 
-    def _validate_call(self, uid, args):
-        pass
+    def _validate_call(self, uid, args, num_expect=2, name='call'):
+        len_args = len(args)
+        if len_args == num_expect:
+            return
+        elif len_args < num_expect:
+            message = 'Not enough arguments {0!r}'.format(args)
+        else:
+            message = 'Too many arguments {0!r}'.format(args)
+        self._send("epc-error", uid, message)
+        raise EPCError('({0} {1} ...): {2}'.format(name, uid, message))
 
     def _validate_methods(self, uid, args):
-        pass
+        self._validate_call(uid, args, 0, 'methods')
 
     def _validate_return(self, uid, args):
         len_args = len(args)
