@@ -166,10 +166,22 @@ class TestEPCServerRequestHandling(BaseEPCServerTestCase):
             EPCErrorCallerUnknown, ('message',))
 
     def check_invalid_call(self, make_call):
+
+        def handle_error(err):
+            self.assertTrue(orig_handle_error(err))
+            called_with.put(err)
+            return True
+        self.check_echo()  # to fetch handler
+        handler = self.server.clients[0]
+        orig_handle_error = handler.handle_error
+        called_with = Queue.Queue()
+
         uid = 1
-        with logging_to_stdout(self.server.logger):
+        with nested(logging_to_stdout(self.server.logger),
+                    mockedattr(handler, 'handle_error', handle_error)):
             self.client_send(make_call(uid))
             reply = self.receive_message()
+            called_with.get(timeout=1)
         self.assertEqual(reply[0], Symbol('epc-error'))
         self.assertEqual(reply[1], uid)
 
