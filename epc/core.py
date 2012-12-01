@@ -1,6 +1,63 @@
+import logging
+
 from sexpdata import loads, dumps, Symbol
 
 from .py3compat import Queue
+
+
+class BaseRemoteError(Exception):
+    """
+    All exceptions from remote method are derived from this class.
+    """
+
+
+class CallerUnknown(BaseRemoteError):
+    """
+    Error raised in remote method, but caller of the method is unknown.
+    """
+
+
+class EPCError(BaseRemoteError):
+    """
+    Error returned by `epc-error` protocol.
+    """
+
+
+class ReturnError(BaseRemoteError):
+    """
+    Error returned by `return-error` protocol.
+    """
+
+
+class EPCErrorCallerUnknown(CallerUnknown, EPCError):
+    """
+    Same as :class:`EPCError`, but caller is unknown.
+    """
+
+
+class ReturnErrorCallerUnknown(CallerUnknown, ReturnError):
+    """
+    Same as :class:`ReturnError`, but caller is unknown.
+    """
+
+
+class EPCClosed(Exception):
+    """
+    Trying to send to a closed socket.
+    """
+
+
+def _get_logger():
+    """
+    Generate a logger with a stream handler.
+    """
+    logger = logging.getLogger('epc')
+    hndlr = logging.StreamHandler()
+    hndlr.setLevel(logging.INFO)
+    hndlr.setFormatter(logging.Formatter(logging.BASIC_FORMAT))
+    logger.addHandler(hndlr)
+    return logger
+logger = _get_logger()
 
 
 def encode_string(string):

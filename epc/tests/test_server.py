@@ -5,11 +5,11 @@ import socket
 
 from sexpdata import Symbol, loads
 
-from ..server import ThreadingEPCServer, \
+from ..server import ThreadingEPCServer
+from ..utils import newthread
+from ..core import encode_string, encode_object, BlockingCallback, \
     ReturnError, EPCError, ReturnErrorCallerUnknown, EPCErrorCallerUnknown, \
     CallerUnknown
-from ..utils import newthread
-from ..core import encode_string, encode_object, BlockingCallback
 from ..py3compat import PY3, utf8, Queue, nested
 from .utils import mockedattr, logging_to_stdout, BaseTestCase
 
