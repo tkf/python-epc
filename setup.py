@@ -10,7 +10,7 @@ setup(
     author_email='aka.tkf@gmail.com',
     url='https://github.com/tkf/python-epc',
     license=epc.__license__,
-    description='EPC (RPC stack for Emacs Lisp) server for Python',
+    description='EPC (RPC stack for Emacs Lisp) implementation in Python',
     long_description=epc.__doc__,
     keywords='Emacs, RPC',
     classifiers=[
