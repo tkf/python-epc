@@ -15,7 +15,7 @@ def _get_logger():
 _logger = _get_logger()
 
 
-class EPCDispacher:
+class EPCDispatcher:
 
     # This class will be mixed with `SocketServer.TCPServer`,
     # which is an old style class.
@@ -81,7 +81,7 @@ class EPCDispacher:
                     self.instance, name, self.allow_dotted_names)
 
 
-class EPCCore(EPCDispacher):
+class EPCCore(EPCDispatcher):
 
     """
     Core methods shared by `EPCServer` and `EPCClient`.
@@ -90,7 +90,7 @@ class EPCCore(EPCDispacher):
     logger = _logger
 
     def __init__(self, debugger):
-        EPCDispacher.__init__(self)
+        EPCDispatcher.__init__(self)
         self.set_debugger(debugger)
 
     def set_debugger(self, debugger):
