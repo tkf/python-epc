@@ -34,6 +34,9 @@ full-test: test elpa
 run-sample:
 	${sample_runner} examples/echo/client.el
 
+run-quick-launcher-sample:
+	${sample_runner} examples/quick-launcher/client.el
+
 run-gtk-sample:
 	${carton_emacs} -l examples/gtk/client.el
 
