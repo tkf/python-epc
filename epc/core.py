@@ -110,7 +110,12 @@ class BlockingCallback(object):
             raise reply
 
 
-class EPCDispacher:        # SocketServer.TCPServer is old style class
+class EPCDispacher:
+
+    # This class will be mixed with `SocketServer.TCPServer`,
+    # which is an old style class.
+
+    # see also: SimpleXMLRPCServer.SimpleXMLRPCDispatcher
 
     logger = logger
 

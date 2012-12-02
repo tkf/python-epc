@@ -15,6 +15,9 @@ def setuplogfile(logger=logger, filename='python-epc.log'):
 
 class EPCClientManager:
 
+    # This class will be mixed with `SocketServer.TCPServer`,
+    # which is an old style class.
+
     def __init__(self):
         self.clients = []
         """
@@ -130,8 +133,6 @@ class EPCServer(SocketServer.TCPServer, EPCClientManager,
         stream.write(str(self.server_address[1]))
         stream.write("\n")
         stream.flush()
-
-# see also: SimpleXMLRPCServer.SimpleXMLRPCDispatcher
 
 
 class ThreadingEPCServer(SocketServer.ThreadingMixIn, EPCServer):
