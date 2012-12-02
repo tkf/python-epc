@@ -155,24 +155,45 @@ class ThreadingEPCServer(SocketServer.ThreadingMixIn, EPCServer):
         EPCServer.__init__(self, *args, **kwds)
 
 
-def echo_server(address='localhost', port=0, logfilename='python-epc.log'):
-    server = EPCServer((address, port))
-    server.logger.setLevel(logging.DEBUG)
+def main(args=None):
+    """
+    Quick CLI to serve Python functions in a module.
 
-    ch = logging.FileHandler(filename=logfilename, mode='w')
-    ch.setLevel(logging.DEBUG)
-    server.logger.addHandler(ch)
+    Example usage::
 
-    def echo(*a):
-        """Return argument unchanged."""
-        return a
-    server.register_function(echo)
-    return server
+        python -m epc.server --allow-dotted-names os
+
+    Note that only the functions which gets and returns simple
+    built-in types (str, int, float, list, tuple, dict) works.
+
+    """
+    import argparse
+    from textwrap import dedent
+    parser = argparse.ArgumentParser(
+        formatter_class=type('EPCHelpFormatter',
+                             (argparse.ArgumentDefaultsHelpFormatter,
+                              argparse.RawDescriptionHelpFormatter),
+                             {}),
+        description=dedent(main.__doc__))
+    parser.add_argument(
+        'module', help='Serve python functions in this module.')
+    parser.add_argument(
+        '--address', default='localhost',
+        help='server address')
+    parser.add_argument(
+        '--port', default=0, type=int,
+        help='server port. 0 means to pick up random port.')
+    parser.add_argument(
+        '--allow-dotted-names', default=False, action='store_true')
+    ns = parser.parse_args(args)
+
+    server = EPCServer((ns.address, ns.port))
+    server.register_instance(
+        __import__(ns.module),
+        allow_dotted_names=ns.allow_dotted_names)
+    server.print_port()
+    server.serve_forever()
 
 
 if __name__ == '__main__':
-    server = echo_server()
-    server.print_port()  # needed for Emacs client
-
-    server.serve_forever()
-    server.logger.info('exit')
+    main()

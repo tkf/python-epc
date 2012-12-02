@@ -6,8 +6,13 @@
 
 (message "Start EPC")
 
+(defvar my-epc-server-py
+  (expand-file-name "server.py"
+                    (file-name-directory
+                     (or load-file-name buffer-file-name))))
+
 (defvar my-epc (epc:start-epc (or (getenv "PYTHON") "python")
-                              '("-m" "epc.server")))
+                              (list my-epc-server-py)))
 
 (message "Start request")
 
