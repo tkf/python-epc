@@ -1,4 +1,5 @@
 import logging
+from .py3compat import SimpleXMLRPCServer
 
 
 def _get_logger():
@@ -57,7 +58,8 @@ class EPCDispacher:
             try:
                 return self.instance._get_method(name)
             except AttributeError:
-                return getattr(self.instance, name)
+                return SimpleXMLRPCServer.resolve_dotted_attribute(
+                    self.instance, name, self.allow_dotted_names)
 
 
 class EPCCore(EPCDispacher):
