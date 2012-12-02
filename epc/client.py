@@ -1,6 +1,7 @@
 from .py3compat import Queue
 from .utils import ThreadedIterator, newthread
-from .server import ThreadingEPCHandler, EPCCore
+from .core import EPCCore
+from .handler import ThreadingEPCHandler
 
 
 class EPCClientHandler(ThreadingEPCHandler):
