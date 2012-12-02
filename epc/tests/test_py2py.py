@@ -3,7 +3,7 @@ import nose
 
 from ..client import EPCClient
 from ..server import ThreadingEPCServer
-from ..core import ReturnError
+from ..handler import ReturnError
 from ..utils import newthread, callwith
 from ..py3compat import Queue
 from .utils import BaseTestCase, logging_to_stdout
