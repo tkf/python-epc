@@ -28,7 +28,6 @@ class EPCDispacher:
     def register_instance(self, instance, allow_dotted_names=False):
         self.instance = instance
         self.allow_dotted_names = allow_dotted_names
-        raise NotImplementedError
 
     def register_function(self, function, name=None):
         """
@@ -55,7 +54,10 @@ class EPCDispacher:
         try:
             return self.funcs[name]
         except KeyError:
-            raise AttributeError(name)
+            try:
+                return self.instance._get_method(name)
+            except AttributeError:
+                return getattr(self.instance, name)
 
 
 class EPCCore(EPCDispacher):
