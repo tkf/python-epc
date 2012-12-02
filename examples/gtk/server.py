@@ -33,7 +33,7 @@ pygtk.require('2.0')
 import gtk
 import gobject
 
-from epc.server import ThreadingEPCServer, setuplogfile
+from epc.server import ThreadingEPCServer
 
 
 class SampleGTKServer(object):
@@ -65,7 +65,9 @@ class SampleGTKServer(object):
 
         # Setup logger
         self.server.logger.setLevel(logging.DEBUG)
-        setuplogfile()
+        ch = logging.FileHandler(filename='python-epc.log', mode='w')
+        ch.setLevel(logging.DEBUG)
+        self.server.logger.addHandler(ch)
 
         # Setup server thread
         self.server_thread = threading.Thread(target=self.server.serve_forever)
