@@ -11,7 +11,7 @@ def _get_logger():
     hndlr.setFormatter(logging.Formatter(logging.BASIC_FORMAT))
     logger.addHandler(hndlr)
     return logger
-logger = _get_logger()
+_logger = _get_logger()
 
 
 class EPCDispacher:
@@ -55,7 +55,7 @@ class EPCCore(EPCDispacher):
     Core methods shared by `EPCServer` and `EPCClient`.
     """
 
-    logger = logger
+    logger = _logger
 
     def __init__(self, debugger):
         EPCDispacher.__init__(self)

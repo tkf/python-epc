@@ -9,7 +9,7 @@ from .handler import EPCHandler, ThreadingEPCHandler
 
 def setuplogfile(logger=None, filename='python-epc.log'):
     if logger is None:
-        from .core import logger
+        from .core import _logger as logger
     ch = logging.FileHandler(filename=filename, mode='w')
     ch.setLevel(logging.DEBUG)
     logger.addHandler(ch)
