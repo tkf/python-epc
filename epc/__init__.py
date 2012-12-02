@@ -51,7 +51,7 @@ Usage
 -----
 
 Save the following code as ``my-server.py``.
-(You can find the same code at the bottom of ``epc/server.py``)::
+(You can find functionally the same code in `examples/echo/server.py`_)::
 
    from epc.server import EPCServer
 
@@ -81,6 +81,8 @@ Python-EPC repository_.::
    (message "Return : %S" (epc:call-sync my-epc 'echo '(10 40)))
 
 
+.. _examples/echo/server.py:
+   https://github.com/tkf/python-epc/blob/master/examples/echo/server.py
 .. _examples/echo/client.el:
    https://github.com/tkf/python-epc/blob/master/examples/echo/client.el
 
