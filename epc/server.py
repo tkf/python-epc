@@ -153,3 +153,47 @@ class ThreadingEPCServer(SocketServer.ThreadingMixIn, EPCServer):
     def __init__(self, *args, **kwds):
         kwds.update(RequestHandlerClass=ThreadingEPCHandler)
         EPCServer.__init__(self, *args, **kwds)
+
+
+def main(args=None):
+    """
+    Quick CLI to serve Python functions in a module.
+
+    Example usage::
+
+        python -m epc.server --allow-dotted-names os
+
+    Note that only the functions which gets and returns simple
+    built-in types (str, int, float, list, tuple, dict) works.
+
+    """
+    import argparse
+    from textwrap import dedent
+    parser = argparse.ArgumentParser(
+        formatter_class=type('EPCHelpFormatter',
+                             (argparse.ArgumentDefaultsHelpFormatter,
+                              argparse.RawDescriptionHelpFormatter),
+                             {}),
+        description=dedent(main.__doc__))
+    parser.add_argument(
+        'module', help='Serve python functions in this module.')
+    parser.add_argument(
+        '--address', default='localhost',
+        help='server address')
+    parser.add_argument(
+        '--port', default=0, type=int,
+        help='server port. 0 means to pick up random port.')
+    parser.add_argument(
+        '--allow-dotted-names', default=False, action='store_true')
+    ns = parser.parse_args(args)
+
+    server = EPCServer((ns.address, ns.port))
+    server.register_instance(
+        __import__(ns.module),
+        allow_dotted_names=ns.allow_dotted_names)
+    server.print_port()
+    server.serve_forever()
+
+
+if __name__ == '__main__':
+    main()
