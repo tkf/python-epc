@@ -1,4 +1,5 @@
 import logging
+from .py3compat import SimpleXMLRPCServer
 
 
 def _get_logger():
@@ -14,7 +15,7 @@ def _get_logger():
 _logger = _get_logger()
 
 
-class EPCDispacher:
+class EPCDispatcher:
 
     # This class will be mixed with `SocketServer.TCPServer`,
     # which is an old style class.
@@ -26,9 +27,27 @@ class EPCDispacher:
         self.instance = None
 
     def register_instance(self, instance, allow_dotted_names=False):
+        """
+        Register an instance to respond to EPC requests.
+
+        :type instance: object
+        :arg  instance:
+            An object with methods to provide to peer.  If this
+            instance has `_get_method` method, EPC method name
+            resolution can be done by this method.
+
+        :type allow_dotted_names: bool
+        :arg  allow_dotted_names:
+            If it is true, method names containing dots are supported.
+            They are resolved using `getattr` for each part of the
+            name as long as it does not start with '_'.
+
+        Unlike :meth:`register_function`, only one instance can
+        be registered.
+
+        """
         self.instance = instance
         self.allow_dotted_names = allow_dotted_names
-        raise NotImplementedError
 
     def register_function(self, function, name=None):
         """
@@ -48,8 +67,21 @@ class EPCDispacher:
         self.funcs[name] = function
         return function
 
+    def get_method(self, name):
+        """
+        Get registered method callend `name`.
+        """
+        try:
+            return self.funcs[name]
+        except KeyError:
+            try:
+                return self.instance._get_method(name)
+            except AttributeError:
+                return SimpleXMLRPCServer.resolve_dotted_attribute(
+                    self.instance, name, self.allow_dotted_names)
 
-class EPCCore(EPCDispacher):
+
+class EPCCore(EPCDispatcher):
 
     """
     Core methods shared by `EPCServer` and `EPCClient`.
@@ -58,7 +90,7 @@ class EPCCore(EPCDispacher):
     logger = _logger
 
     def __init__(self, debugger):
-        EPCDispacher.__init__(self)
+        EPCDispatcher.__init__(self)
         self.set_debugger(debugger)
 
     def set_debugger(self, debugger):

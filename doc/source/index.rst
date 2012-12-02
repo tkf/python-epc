@@ -17,6 +17,7 @@ Server
    :no-members:
 
    .. automethod:: register_function
+   .. automethod:: register_instance
    .. automethod:: set_debugger
    .. automethod:: print_port
 

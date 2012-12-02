@@ -7,6 +7,11 @@ except:
     import socketserver as SocketServer
 
 try:
+    import SimpleXMLRPCServer
+except:
+    import xmlrpc.server as SimpleXMLRPCServer
+
+try:
     import Queue
 except:
     import queue as Queue
