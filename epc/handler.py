@@ -6,7 +6,6 @@ from sexpdata import loads, dumps, Symbol, String
 
 from .py3compat import SocketServer, Queue
 from .utils import autolog, LockingDict, newthread, callwith
-from .core import logger
 
 
 class BaseRemoteError(Exception):
@@ -165,7 +164,9 @@ class EPCHandler(SocketServer.StreamRequestHandler):
     # self.rfile      : stream from client
     # self.wfile      : stream to client
 
-    logger = logger
+    @property
+    def logger(self):
+        return self.server.logger
 
     @autolog('debug')
     def setup(self):

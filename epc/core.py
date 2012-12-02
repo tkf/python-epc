@@ -21,8 +21,6 @@ class EPCDispacher:
 
     # see also: SimpleXMLRPCServer.SimpleXMLRPCDispatcher
 
-    logger = logger
-
     def __init__(self):
         self.funcs = {}
         self.instance = None
@@ -56,6 +54,8 @@ class EPCCore(EPCDispacher):
     """
     Core methods shared by `EPCServer` and `EPCClient`.
     """
+
+    logger = logger
 
     def __init__(self, debugger):
         EPCDispacher.__init__(self)

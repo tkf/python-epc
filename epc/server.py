@@ -3,11 +3,13 @@ import logging
 
 from .py3compat import SocketServer
 from .utils import autolog
-from .core import logger, EPCCore
+from .core import EPCCore
 from .handler import EPCHandler, ThreadingEPCHandler
 
 
-def setuplogfile(logger=logger, filename='python-epc.log'):
+def setuplogfile(logger=None, filename='python-epc.log'):
+    if logger is None:
+        from .core import logger
     ch = logging.FileHandler(filename=filename, mode='w')
     ch.setLevel(logging.DEBUG)
     logger.addHandler(ch)
@@ -89,8 +91,6 @@ class EPCServer(SocketServer.TCPServer, EPCClientManager,
     for other usable methods.
 
     """
-
-    logger = logger
 
     def __init__(self, server_address,
                  RequestHandlerClass=EPCHandler,
