@@ -27,6 +27,25 @@ class EPCDispacher:
         self.instance = None
 
     def register_instance(self, instance, allow_dotted_names=False):
+        """
+        Register an instance to respond to EPC requests.
+
+        :type instance: object
+        :arg  instance:
+            An object with methods to provide to peer.  If this
+            instance has `_get_method` method, EPC method name
+            resolution can be done by this method.
+
+        :type allow_dotted_names: bool
+        :arg  allow_dotted_names:
+            If it is true, method names containing dots are supported.
+            They are resolved using `getattr` for each part of the
+            name as long as it does not start with '_'.
+
+        Unlike :meth:`register_function`, only one instance can
+        be registered.
+
+        """
         self.instance = instance
         self.allow_dotted_names = allow_dotted_names
 
