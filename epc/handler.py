@@ -194,19 +194,12 @@ class EPCHandler(SocketServer.StreamRequestHandler):
                 raise  # if not, just re-raise it.
 
     def _recv(self):
-        while True:
-            self.logger.debug('receiving...')
-            head = self._rfile_read_safely(6)
-            if not head:
-                return
-            length = int(head, 16)
-            data = self._rfile_read_safely(length)
-            if len(data) < length:
-                raise ValueError('need {0}-length data; got {1}'
-                                 .format(length, len(data)))
+        self.logger.debug('receiving...')
+        for data in itermessage(self._rfile_read_safely):
             self.logger.debug(
-                'received: length = %r; data = %r', length, data)
+                'received: length = %r; data = %r', len(data), data)
             yield data
+            self.logger.debug('receiving...')
 
     @autolog('debug')
     def _send(self, *args):
