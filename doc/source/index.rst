@@ -60,7 +60,7 @@ EPC client API
 EPC exceptions
 ==============
 
-.. py:module:: epc.core
+.. py:module:: epc.handler
 
 .. inheritance-diagram::
    EPCErrorCallerUnknown
