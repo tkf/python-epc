@@ -1,13 +1,12 @@
-import unittest
-
 from ..core import EPCDispatcher
+from .utils import BaseTestCase
 
 
 class Dummy(object):
     pass
 
 
-class TestEPCDispatcher(unittest.TestCase):
+class TestEPCDispatcher(BaseTestCase):
 
     def setUp(self):
         self.dispatcher = EPCDispatcher()

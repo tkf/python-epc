@@ -36,6 +36,10 @@ class BaseTestCase(unittest.TestCase):
     else:
         timeout = 1
 
+    if not hasattr(unittest.TestCase, 'assertIs'):
+        def assertIs(self, expr1, expr2, msg=None):
+            self.assertTrue(expr1 is expr2, msg)
+
     if not hasattr(unittest.TestCase, 'assertIsInstance'):
         def assertIsInstance(self, obj, cls, msg=None):
             self.assertTrue(isinstance(obj, cls), msg),
