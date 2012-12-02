@@ -48,6 +48,15 @@ class EPCDispacher:
         self.funcs[name] = function
         return function
 
+    def get_method(self, name):
+        """
+        Get registered method callend `name`.
+        """
+        try:
+            return self.funcs[name]
+        except KeyError:
+            raise AttributeError(name)
+
 
 class EPCCore(EPCDispacher):
 

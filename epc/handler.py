@@ -239,12 +239,12 @@ class EPCHandler(SocketServer.StreamRequestHandler):
     def _handle_call(self, uid, meth, args):
         # See: `epc:handler-called-method`
         name = meth.value()
-        if name in self.server.funcs:
-            func = self.server.funcs[name]
-            return ['return', uid, func(*args)]
-        else:
+        try:
+            func = self.server.get_method(name)
+        except AttributeError:
             return ['epc-error', uid,
                     "EPC-ERROR: No such method : {0}".format(name)]
+        return ['return', uid, func(*args)]
 
     def _handle_methods(self, uid):
         return ['return', uid, [
