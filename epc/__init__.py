@@ -133,6 +133,6 @@ see `examples/gtk/server.py`_.  You can run this example by::
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-__version__ = '0.0.3.dev2'
+__version__ = '0.0.3.dev3'
 __author__ = 'Takafumi Arakaki'
 __license__ = 'BSD License'
