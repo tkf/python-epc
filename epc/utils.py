@@ -2,6 +2,7 @@ import logging
 import itertools
 import functools
 import threading
+import warnings
 
 from .py3compat import Queue
 
@@ -36,6 +37,21 @@ def autolog(level):
                             funcname, ret)
             return ret
         return new_method
+    return wrapper
+
+
+def deprecated(func):
+    """
+    Decorator for marking function as deprecated
+    """
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        warnings.warn(
+            '{0} is deprecated.'.format(func.__name__),
+            category=DeprecationWarning,
+            stacklevel=2,
+        )
+        return func(*args, **kwargs)
     return wrapper
 
 

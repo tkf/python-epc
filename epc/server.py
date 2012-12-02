@@ -2,11 +2,12 @@ import sys
 import logging
 
 from .py3compat import SocketServer
-from .utils import autolog
+from .utils import autolog, deprecated
 from .core import EPCCore
 from .handler import EPCHandler, ThreadingEPCHandler
 
 
+@deprecated
 def setuplogfile(logger=None, filename='python-epc.log'):
     if logger is None:
         from .core import _logger as logger
@@ -154,10 +155,13 @@ class ThreadingEPCServer(SocketServer.ThreadingMixIn, EPCServer):
         EPCServer.__init__(self, *args, **kwds)
 
 
-def echo_server(address='localhost', port=0):
+def echo_server(address='localhost', port=0, logfilename='python-epc.log'):
     server = EPCServer((address, port))
     server.logger.setLevel(logging.DEBUG)
-    setuplogfile()
+
+    ch = logging.FileHandler(filename=logfilename, mode='w')
+    ch.setLevel(logging.DEBUG)
+    server.logger.addHandler(ch)
 
     def echo(*a):
         """Return argument unchanged."""
