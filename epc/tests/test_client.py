@@ -3,8 +3,8 @@ import io
 from sexpdata import Symbol
 
 from ..client import EPCClient
-from ..server import ReturnError, EPCError
-from ..core import encode_message, unpack_message, BlockingCallback
+from ..handler import encode_message, unpack_message, BlockingCallback, \
+    ReturnError, EPCError
 from ..py3compat import Queue
 from .utils import BaseTestCase
 
