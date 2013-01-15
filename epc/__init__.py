@@ -104,6 +104,13 @@ see `examples/gtk/server.py`_.  You can run this example by::
 .. _examples/gtk/server.py:
    https://github.com/tkf/python-epc/blob/master/examples/gtk/server.py
 
+
+License
+-------
+
+Python-EPC is licensed under GPL v3.
+See COPYING for details.
+
 """
 # [[[end]]]
 
