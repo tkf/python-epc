@@ -132,4 +132,4 @@ See COPYING for details.
 
 __version__ = '0.0.3.dev3'
 __author__ = 'Takafumi Arakaki'
-__license__ = 'GNU GPLv3'
+__license__ = 'GNU General Public License v3 (GPLv3)'
