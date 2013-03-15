@@ -112,7 +112,7 @@ class EPCServer(SocketServer.TCPServer, EPCClientManager,
     def __init__(self, server_address,
                  RequestHandlerClass=EPCHandler,
                  bind_and_activate=True,
-                 debugger=None):
+                 debugger=None, log_traceback=False):
         # `BaseServer` (super class of `SocketServer`) will set
         # `RequestHandlerClass` to the attribute `self.RequestHandlerClass`.
         # This class is initialize in `BaseServer.finish_request` by
@@ -120,7 +120,7 @@ class EPCServer(SocketServer.TCPServer, EPCClientManager,
         SocketServer.TCPServer.__init__(
             self, server_address, RequestHandlerClass, bind_and_activate)
         EPCClientManager.__init__(self)
-        EPCCore.__init__(self, debugger)
+        EPCCore.__init__(self, debugger, log_traceback)
         self.logger.debug('-' * 75)
         self.logger.debug(
             "EPCServer is initialized: server_address = %r",

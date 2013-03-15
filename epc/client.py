@@ -89,10 +89,11 @@ class EPCClient(EPCCore):
 
     thread_daemon = True
 
-    def __init__(self, socket_or_address=None, debugger=None):
+    def __init__(self, socket_or_address=None,
+                 debugger=None, log_traceback=False):
         if socket_or_address is not None:
             self.connect(socket_or_address)
-        EPCCore.__init__(self, debugger)
+        EPCCore.__init__(self, debugger, log_traceback)
 
     def connect(self, socket_or_address):
         """
