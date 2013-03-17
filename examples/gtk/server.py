@@ -61,7 +61,7 @@ class SampleGTKServer(object):
         self.window.show()
 
     def setup_epc(self):
-        self.server = ThreadingEPCServer(('localhost', 0))
+        self.server = ThreadingEPCServer(('localhost', 0), log_traceback=True)
 
         # Setup logger
         self.server.logger.setLevel(logging.DEBUG)

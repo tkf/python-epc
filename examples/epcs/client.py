@@ -4,7 +4,7 @@ from epc.client import EPCClient
 
 
 def run_client(address, port, log, log_level):
-    client = EPCClient((address, port))
+    client = EPCClient((address, port), log_traceback=True)
 
     if log:
         level = getattr(logging, log_level.upper())

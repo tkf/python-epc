@@ -33,7 +33,7 @@ from epc.tests.test_py2py import ThreadingPy2Py
 
 def echo_long_string(length, repeat):
     p2p = ThreadingPy2Py()
-    p2p.setup_connection()
+    p2p.setup_connection(log_traceback=True)
 
     @p2p.server.register_function
     def echo(x):

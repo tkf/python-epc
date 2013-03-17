@@ -44,8 +44,8 @@ class ThreadingPy2Py(object):
 
     """
 
-    def setup_connection(self):
-        self.server = ThreadingEPCServer(('localhost', 0))
+    def setup_connection(self, **kwds):
+        self.server = ThreadingEPCServer(('localhost', 0), **kwds)
         self.server.daemon_threads = True
         self.server_thread = newthread(self, target=self.server.serve_forever)
         self.server_thread.start()
@@ -53,7 +53,7 @@ class ThreadingPy2Py(object):
         self.client_queue = q = Queue.Queue()
         self.server.handle_client_connect = q.put
 
-        self.client = EPCClient(self.server.server_address)
+        self.client = EPCClient(self.server.server_address, **kwds)
 
     def teardown_connection(self):
         self.client.close()
