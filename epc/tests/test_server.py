@@ -16,7 +16,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import io
 import socket
 
 from sexpdata import Symbol, loads
@@ -26,8 +25,9 @@ from ..utils import newthread
 from ..handler import encode_string, encode_object, BlockingCallback, \
     ReturnError, EPCError, ReturnErrorCallerUnknown, EPCErrorCallerUnknown, \
     CallerUnknown
-from ..py3compat import PY3, utf8, Queue, nested
-from .utils import mockedattr, logging_to_stdout, CaptureStdIO, BaseTestCase
+from ..py3compat import utf8, Queue, nested
+from .utils import mockedattr, logging_to_stdout, CaptureStdIO, BaseTestCase, \
+    streamio
 
 
 class TestEPCServerMisc(BaseTestCase):
@@ -48,10 +48,7 @@ class TestEPCServerMisc(BaseTestCase):
         self.server.server_close()
 
     def test_print_port(self):
-        if PY3:
-            stream = io.StringIO()
-        else:
-            stream = io.BytesIO()
+        stream = streamio()
         self.server.print_port(stream)
         self.assertEqual(stream.getvalue(),
                          '{0}\n'.format(self.server.server_address[1]))
