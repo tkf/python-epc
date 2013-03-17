@@ -26,6 +26,6 @@ setup(
         # see: http://pypi.python.org/pypi?%3Aaction=list_classifiers
     ],
     install_requires=[
-        'sexpdata',
+        'sexpdata >= 0.0.2',
     ],
 )
