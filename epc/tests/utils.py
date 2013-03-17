@@ -17,11 +17,12 @@
 import os
 import sys
 import functools
+import io
 
 import unittest
 from contextlib import contextmanager
 
-from ..py3compat import Queue
+from ..py3compat import Queue, PY3
 from ..utils import newthread
 
 
@@ -41,6 +42,42 @@ def mockedattr(object, name, replace):
 def logging_to_stdout(logger):
     # it assumes that 0-th hander is the only one stream handler...
     return mockedattr(logger.handlers[0], 'stream', sys.stdout)
+
+
+def streamio():
+    """
+    Return `io.StringIO` for Python 3, otherwise `io.BytesIO`.
+    """
+    if PY3:
+        return io.StringIO()
+    else:
+        return io.BytesIO()
+
+
+class CaptureStdIO(object):
+
+    def __enter__(self):
+        self._orig_stdin = sys.stdin
+        self._orig_stdout = sys.stdout
+        self._orig_stderr = sys.stderr
+
+        self.stdin = sys.stdin = streamio()
+        self.stdout = sys.stdout = streamio()
+        self.stderr = sys.stderr = streamio()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        sys.stdin = self._orig_stdin
+        sys.stdout = self._orig_stdout
+        sys.stderr = self._orig_stderr
+
+    def read_stdout(self):
+        self.stdout.seek(0)
+        return self.stdout.read()
+
+    def read_stderr(self):
+        self.stderr.seek(0)
+        return self.stderr.read()
 
 
 class BaseTestCase(unittest.TestCase):

@@ -27,7 +27,7 @@ from ..handler import encode_string, encode_object, BlockingCallback, \
     ReturnError, EPCError, ReturnErrorCallerUnknown, EPCErrorCallerUnknown, \
     CallerUnknown
 from ..py3compat import PY3, utf8, Queue, nested
-from .utils import mockedattr, logging_to_stdout, BaseTestCase
+from .utils import mockedattr, logging_to_stdout, CaptureStdIO, BaseTestCase
 
 
 class TestEPCServerMisc(BaseTestCase):
@@ -215,6 +215,14 @@ class TestEPCServerRequestHandling(BaseEPCServerTestCase):
 
     def test_invalid_methods_too_many_arguments(self):
         self.check_invalid_call('(methods {0} "extra value")'.format)
+
+    def test_log_traceback(self):
+        stdio = CaptureStdIO()
+        with nested(stdio, mockedattr(self.server, 'log_traceback', True)):
+            self.test_error_in_method()
+        log = stdio.read_stdout()
+        self.assertIn('ValueError: This is a bad method!', log)
+        self.assertIn('raise self.error_to_throw', log)
 
 
 class TestEPCServerCallClient(BaseEPCServerTestCase):
