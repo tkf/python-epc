@@ -19,7 +19,11 @@ import sys
 import functools
 import io
 
-import unittest
+try:
+    import unittest
+    unittest.TestCase.assertIs
+except AttributeError:
+    import unittest2 as unittest
 from contextlib import contextmanager
 
 from ..py3compat import Queue, PY3
@@ -88,14 +92,6 @@ class BaseTestCase(unittest.TestCase):
         timeout = 10
     else:
         timeout = 1
-
-    if not hasattr(unittest.TestCase, 'assertIs'):
-        def assertIs(self, expr1, expr2, msg=None):
-            self.assertTrue(expr1 is expr2, msg)
-
-    if not hasattr(unittest.TestCase, 'assertIsInstance'):
-        def assertIsInstance(self, obj, cls, msg=None):
-            self.assertTrue(isinstance(obj, cls), msg),
 
 
 def skip(reason):
