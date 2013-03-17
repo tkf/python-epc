@@ -37,6 +37,9 @@ run-sample:
 run-quick-launcher-sample:
 	${sample_runner} examples/quick-launcher/client.el
 
+run-epcs:
+	EMACS=${EMACS} PYTHON=${PYTHON} CARTON=${CARTON} examples/epcs/run.sh
+
 run-gtk-sample:
 	${carton_emacs} -l examples/gtk/client.el
 
