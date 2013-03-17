@@ -27,15 +27,22 @@ test:
 	tox
 
 full-test: test elpa
-	make run-sample ENV=py26
-	make run-sample ENV=py27
-	make run-sample ENV=py32
+	make run-testable-samples ENV=py26
+	make run-testable-samples ENV=py27
+	make run-testable-samples ENV=py32
+
+run-testable-samples: run-sample run-quick-launcher-sample run-inprocess
+# NOTE: run-inprocess is not added to here as the PORT for this
+# example if fixed.
 
 run-sample:
 	${sample_runner} examples/echo/client.el
 
 run-quick-launcher-sample:
 	${sample_runner} examples/quick-launcher/client.el
+
+run-inprocess:
+	${PYTHON} examples/inprocess/echo.py
 
 run-epcs:
 	EMACS=${EMACS} PYTHON=${PYTHON} CARTON=${CARTON} examples/epcs/run.sh
