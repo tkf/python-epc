@@ -56,6 +56,9 @@ elpa:
 clean-elpa:
 	rm -rf elpa
 
+clean-elc:
+	rm -f examples/*/*.elc
+
 
 ## Document
 doc: cog
