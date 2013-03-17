@@ -112,7 +112,7 @@ class EPCServer(SocketServer.TCPServer, EPCClientManager,
     def __init__(self, server_address,
                  RequestHandlerClass=EPCHandler,
                  bind_and_activate=True,
-                 debugger=None):
+                 debugger=None, log_traceback=False):
         # `BaseServer` (super class of `SocketServer`) will set
         # `RequestHandlerClass` to the attribute `self.RequestHandlerClass`.
         # This class is initialize in `BaseServer.finish_request` by
@@ -120,7 +120,7 @@ class EPCServer(SocketServer.TCPServer, EPCClientManager,
         SocketServer.TCPServer.__init__(
             self, server_address, RequestHandlerClass, bind_and_activate)
         EPCClientManager.__init__(self)
-        EPCCore.__init__(self, debugger)
+        EPCCore.__init__(self, debugger, log_traceback)
         self.logger.debug('-' * 75)
         self.logger.debug(
             "EPCServer is initialized: server_address = %r",
@@ -201,9 +201,19 @@ def main(args=None):
         help='server port. 0 means to pick up random port.')
     parser.add_argument(
         '--allow-dotted-names', default=False, action='store_true')
+    parser.add_argument(
+        '--pdb', dest='debugger', const='pdb', action='store_const',
+        help='start pdb when error occurs.')
+    parser.add_argument(
+        '--ipdb', dest='debugger', const='ipdb', action='store_const',
+        help='start ipdb when error occurs.')
+    parser.add_argument(
+        '--log-traceback', action='store_true', default=False)
     ns = parser.parse_args(args)
 
-    server = EPCServer((ns.address, ns.port))
+    server = EPCServer((ns.address, ns.port),
+                       debugger=ns.debugger,
+                       log_traceback=ns.log_traceback)
     server.register_instance(
         __import__(ns.module),
         allow_dotted_names=ns.allow_dotted_names)

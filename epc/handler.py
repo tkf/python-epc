@@ -245,9 +245,11 @@ class EPCHandler(SocketServer.StreamRequestHandler):
         except Exception as err:
             if self.handle_error(err):
                 return
+            if self.server.debugger or self.server.log_traceback:
+                exc_info = sys.exc_info()
+                self.logger.error('Unexpected error', exc_info=exc_info)
             if self.server.debugger:
-                traceback = sys.exc_info()[2]
-                self.server.debugger.post_mortem(traceback)
+                self.server.debugger.post_mortem(exc_info[2])
             name = 'epc-error' if uid is undefined else 'return-error'
             self._send(name, uid, repr(err))
 

@@ -105,9 +105,10 @@ class EPCCore(EPCDispatcher):
 
     logger = _logger
 
-    def __init__(self, debugger):
+    def __init__(self, debugger, log_traceback):
         EPCDispatcher.__init__(self)
         self.set_debugger(debugger)
+        self.log_traceback = log_traceback
 
     def set_debugger(self, debugger):
         """

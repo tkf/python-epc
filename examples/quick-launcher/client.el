@@ -8,7 +8,8 @@
 
 (defvar my-epc (epc:start-epc
                 (or (getenv "PYTHON") "python")
-                '("-m" "epc.server" "--allow-dotted-names" "os")))
+                '("-m" "epc.server" "--log-traceback"
+                  "--allow-dotted-names" "os")))
 
 (message "Start request")
 
