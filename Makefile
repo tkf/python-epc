@@ -57,7 +57,12 @@ run-gtk-sample:
 elpa: ${ELPA_DIR}
 ${ELPA_DIR}: Cask
 	${CASK} install
+	test -d $@
+	${MAKE} EMACS=${EMACS} check-elpa
 	touch $@
+
+check-elpa:
+	${VIRTUAL_EMACS} -batch --eval "(require 'epc)"
 
 clean-elpa:
 	rm -rf ${ELPA_DIR}
