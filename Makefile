@@ -1,22 +1,15 @@
 ifdef ENV
 	PYTHON = $(shell pwd)/.tox/${ENV}/bin/python
 endif
+PYTHON ?= python
+CASK ?= cask
+EMACS ?= emacs
+VIRTUAL_EMACS = EMACS=${EMACS} PYTHON=${PYTHON} ${CASK} exec ${EMACS} -Q
+sample_runner = ${VIRTUAL_EMACS} -batch -l
 
-ifndef PYTHON
-	PYTHON = python
-endif
-
-ifndef CARTON
-	CARTON = carton
-endif
-
-ifndef EMACS
-	EMACS = emacs
-endif
-
-carton_exec = EMACS=${EMACS} PYTHON=${PYTHON} ${CARTON} exec
-carton_emacs = ${carton_exec} ${EMACS} -Q
-sample_runner = ${carton_emacs} -batch -l
+ELPA_DIR = \
+	.cask/$(shell ${EMACS} -Q --batch --eval '(princ emacs-version)')/elpa
+# See: cask-elpa-dir
 
 .PHONY : test full-test run-sample elpa clean-elpa cog doc upload
 
@@ -26,12 +19,23 @@ sample_runner = ${carton_emacs} -batch -l
 test:
 	tox
 
-full-test: test elpa
-	make run-testable-samples ENV=py26
-	make run-testable-samples ENV=py27
-	make run-testable-samples ENV=py32
+full-test: test elpa .tox
+	${MAKE} run-testable-samples ENV=py26
+	${MAKE} run-testable-samples ENV=py27
+	${MAKE} run-testable-samples ENV=py32
 
-run-testable-samples: run-sample run-quick-launcher-sample run-inprocess
+.tox:
+	tox --notest
+
+.tox/${ENV}:
+	TOXENV=${ENV} tox --notest
+# To make run-testable-samples run-able, .tox and .tox/${ENV} are
+# defined separately.
+
+run-testable-samples: .tox/${ENV}
+	${MAKE} run-testable-samples-1 ENV=${ENV}
+
+run-testable-samples-1: run-sample run-quick-launcher-sample run-inprocess
 # NOTE: run-inprocess is not added to here as the PORT for this
 # example if fixed.
 
@@ -45,20 +49,36 @@ run-inprocess:
 	${PYTHON} examples/inprocess/echo.py
 
 run-epcs:
-	EMACS=${EMACS} PYTHON=${PYTHON} CARTON=${CARTON} examples/epcs/run.sh
+	EMACS=${EMACS} PYTHON=${PYTHON} CASK=${CASK} examples/epcs/run.sh
 
 run-gtk-sample:
-	${carton_emacs} -l examples/gtk/client.el
+	${VIRTUAL_EMACS} -l examples/gtk/client.el
 
-elpa:
-	${CARTON} install
+elpa: ${ELPA_DIR}
+${ELPA_DIR}: Cask
+	${CASK} install
+	test -d $@
+	${MAKE} EMACS=${EMACS} check-elpa
+	touch $@
+
+check-elpa:
+	${VIRTUAL_EMACS} -batch --eval "(require 'epc)"
 
 clean-elpa:
-	rm -rf elpa
+	rm -rf ${ELPA_DIR}
 
 clean-elc:
 	rm -f examples/*/*.elc
 
+print-deps: before-test
+	@echo "----------------------- Dependencies -----------------------"
+	$(EMACS) --version
+	ls -d .tox/*/*/python*/site-packages/*egg-info
+	@echo "------------------------------------------------------------"
+
+before-test: .tox elpa
+
+travis-ci: print-deps full-test
 
 ## Document
 doc: cog

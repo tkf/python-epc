@@ -1,5 +1,5 @@
 .tox
 doc/build
-elpa
+.cask
 MANIFEST
 *.pyc
