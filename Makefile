@@ -65,6 +65,15 @@ clean-elpa:
 clean-elc:
 	rm -f examples/*/*.elc
 
+print-deps: before-test
+	@echo "----------------------- Dependencies -----------------------"
+	$(EMACS) --version
+	ls -d .tox/*/*/python*/site-packages/*egg-info
+	@echo "------------------------------------------------------------"
+
+before-test: .tox elpa
+
+travis-ci: print-deps full-test
 
 ## Document
 doc: cog
