@@ -23,6 +23,7 @@ full-test: test elpa .tox
 	${MAKE} run-testable-samples ENV=py26
 	${MAKE} run-testable-samples ENV=py27
 	${MAKE} run-testable-samples ENV=py32
+	${MAKE} run-testable-samples ENV=py33
 
 .tox:
 	tox --notest
