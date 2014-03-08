@@ -1,22 +1,15 @@
 ifdef ENV
 	PYTHON = $(shell pwd)/.tox/${ENV}/bin/python
 endif
+PYTHON ?= python
+CASK ?= cask
+EMACS ?= emacs
+VIRTUAL_EMACS = EMACS=${EMACS} PYTHON=${PYTHON} ${CASK} exec ${EMACS} -Q
+sample_runner = ${VIRTUAL_EMACS} -batch -l
 
-ifndef PYTHON
-	PYTHON = python
-endif
-
-ifndef CARTON
-	CARTON = carton
-endif
-
-ifndef EMACS
-	EMACS = emacs
-endif
-
-carton_exec = EMACS=${EMACS} PYTHON=${PYTHON} ${CARTON} exec
-carton_emacs = ${carton_exec} ${EMACS} -Q
-sample_runner = ${carton_emacs} -batch -l
+ELPA_DIR = \
+	.cask/$(shell ${EMACS} -Q --batch --eval '(princ emacs-version)')/elpa
+# See: cask-elpa-dir
 
 .PHONY : test full-test run-sample elpa clean-elpa cog doc upload
 
@@ -45,16 +38,18 @@ run-inprocess:
 	${PYTHON} examples/inprocess/echo.py
 
 run-epcs:
-	EMACS=${EMACS} PYTHON=${PYTHON} CARTON=${CARTON} examples/epcs/run.sh
+	EMACS=${EMACS} PYTHON=${PYTHON} CASK=${CASK} examples/epcs/run.sh
 
 run-gtk-sample:
-	${carton_emacs} -l examples/gtk/client.el
+	${VIRTUAL_EMACS} -l examples/gtk/client.el
 
-elpa:
-	${CARTON} install
+elpa: ${ELPA_DIR}
+${ELPA_DIR}: Cask
+	${CASK} install
+	touch $@
 
 clean-elpa:
-	rm -rf elpa
+	rm -rf ${ELPA_DIR}
 
 clean-elc:
 	rm -f examples/*/*.elc
