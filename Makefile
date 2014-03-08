@@ -19,12 +19,23 @@ ELPA_DIR = \
 test:
 	tox
 
-full-test: test elpa
+full-test: test elpa .tox
 	make run-testable-samples ENV=py26
 	make run-testable-samples ENV=py27
 	make run-testable-samples ENV=py32
 
-run-testable-samples: run-sample run-quick-launcher-sample run-inprocess
+.tox:
+	tox --notest
+
+.tox/${ENV}:
+	TOXENV=${ENV} tox --notest
+# To make run-testable-samples run-able, .tox and .tox/${ENV} are
+# defined separately.
+
+run-testable-samples: .tox/${ENV}
+	${MAKE} run-testable-samples-1 ENV=${ENV}
+
+run-testable-samples-1: run-sample run-quick-launcher-sample run-inprocess
 # NOTE: run-inprocess is not added to here as the PORT for this
 # example if fixed.
 
