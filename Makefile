@@ -8,7 +8,7 @@ VIRTUAL_EMACS = EMACS=${EMACS} PYTHON=${PYTHON} ${CASK} exec ${EMACS} -Q
 sample_runner = ${VIRTUAL_EMACS} -batch -l
 
 ELPA_DIR = \
-	.cask/$(shell ${EMACS} -Q --batch --eval '(princ emacs-version)')/elpa
+	.cask/$(shell ${EMACS} -Q --batch --eval '(princ (format "%s.%s" emacs-major-version emacs-minor-version))')/elpa
 # See: cask-elpa-dir
 
 .PHONY : test full-test run-sample elpa clean-elpa cog doc upload
@@ -74,7 +74,7 @@ clean-elc:
 print-deps: before-test
 	@echo "----------------------- Dependencies -----------------------"
 	$(EMACS) --version
-	ls -d .tox/*/*/python*/site-packages/*egg-info
+	tox --run-command "pip freeze"
 	@echo "------------------------------------------------------------"
 
 before-test: .tox elpa
