@@ -14,20 +14,21 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import os
-import sys
 import functools
 import io
+import logging
+import os
+import sys
+from contextlib import contextmanager
+
+from ..py3compat import PY3, Queue
+from ..utils import newthread
 
 try:
     import unittest
     unittest.TestCase.assertIs
 except AttributeError:
     import unittest2 as unittest
-from contextlib import contextmanager
-
-from ..py3compat import Queue, PY3
-from ..utils import newthread
 
 
 @contextmanager
@@ -43,9 +44,21 @@ def mockedattr(object, name, replace):
         setattr(object, name, original)
 
 
+@contextmanager
+def temporary_logger_handler(logger, handler):
+    logger.addHandler(handler)
+    try:
+        yield
+    finally:
+        logger.removeHandler(handler)
+
+
 def logging_to_stdout(logger):
     # it assumes that 0-th hander is the only one stream handler...
-    return mockedattr(logger.handlers[0], 'stream', sys.stdout)
+    if logger.handlers:
+        return mockedattr(logger.handlers[0], 'stream', sys.stdout)
+    handler = logging.StreamHandler(stream=sys.stdout)
+    return temporary_logger_handler(logger, handler)
 
 
 def streamio():

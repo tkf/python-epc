@@ -244,11 +244,20 @@ class EPCHandler(SocketServer.StreamRequestHandler):
                 self._send(*reply)
         except Exception as err:
             if self.handle_error(err):
+                self.logger.debug(
+                    'Error in handler for UID=%s (marked as handled)',
+                    uid,
+                    exc_info=1,
+                )
                 return
-            if self.server.debugger or self.server.log_traceback:
-                exc_info = sys.exc_info()
-                self.logger.error('Unexpected error', exc_info=exc_info)
+            if self.server.log_traceback or self.server.debugger:
+                self.logger.exception('Unexpected error for UID=%s', uid)
+            else:
+                self.logger.error(
+                    'Unexpected error for UID=%s: %s', uid, repr(err),
+                )
             if self.server.debugger:
+                exc_info = sys.exc_info()
                 self.server.debugger.post_mortem(exc_info[2])
             name = 'epc-error' if uid is undefined else 'return-error'
             self._send(name, uid, repr(err))
@@ -262,7 +271,10 @@ class EPCHandler(SocketServer.StreamRequestHandler):
         except AttributeError:
             return ['epc-error', uid,
                     "EPC-ERROR: No such method : {0}".format(name)]
-        return ['return', uid, func(*args)]
+        self.logger.debug('EPC handler %s: args=%s', func, args)
+        result = func(*args)
+        self.logger.debug('EPC handler %s: result=%s', func, result)
+        return ['return', uid, result]
 
     def _handle_methods(self, uid):
         return ['return', uid, [
@@ -342,7 +354,6 @@ class EPCHandler(SocketServer.StreamRequestHandler):
            instance of :class:`BaseRemoteError` or :class:`EPCClosed`.
 
         """
-        self.logger.error(repr(err))
         if isinstance(err, (BaseRemoteError, EPCClosed)):
             # BaseRemoteError: do not send error back
             # EPCClosed: no exception from thread

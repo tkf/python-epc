@@ -6,9 +6,11 @@ CASK ?= cask
 EMACS ?= emacs
 VIRTUAL_EMACS = EMACS=${EMACS} PYTHON=${PYTHON} ${CASK} exec ${EMACS} -Q
 sample_runner = ${VIRTUAL_EMACS} -batch -l
+TOXENVS = $(shell tox -l)
+$(info Active tox envs: ${TOXENVS})
 
 ELPA_DIR = \
-	.cask/$(shell ${EMACS} -Q --batch --eval '(princ emacs-version)')/elpa
+	.cask/$(shell ${EMACS} -Q --batch --eval '(princ (format "%s.%s" emacs-major-version emacs-minor-version))')/elpa
 # See: cask-elpa-dir
 
 .PHONY : test full-test run-sample elpa clean-elpa cog doc upload
@@ -19,17 +21,22 @@ ELPA_DIR = \
 test:
 	tox
 
-full-test: test elpa .tox
-	${MAKE} run-testable-samples ENV=py26
-	${MAKE} run-testable-samples ENV=py27
-	${MAKE} run-testable-samples ENV=py32
-	${MAKE} run-testable-samples ENV=py33
+full-test: # test elpa .tox
+	for toxenv in ${TOXENVS}; do \
+		${MAKE} run-testable-samples ENV=$${toxenv}; \
+	done
 
 .tox:
 	tox --notest
 
 .tox/${ENV}:
+# tox-travis plugin is disabled when there is an empty TOXENV envvar, so that
+# case must be handled separately.
+ifdef ENV
 	TOXENV=${ENV} tox --notest
+else
+	tox --notest
+endif
 # To make run-testable-samples run-able, .tox and .tox/${ENV} are
 # defined separately.
 
@@ -74,7 +81,7 @@ clean-elc:
 print-deps: before-test
 	@echo "----------------------- Dependencies -----------------------"
 	$(EMACS) --version
-	ls -d .tox/*/*/python*/site-packages/*egg-info
+	tox --run-command "pip freeze"
 	@echo "------------------------------------------------------------"
 
 before-test: .tox elpa
