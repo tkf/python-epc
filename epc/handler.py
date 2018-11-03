@@ -253,7 +253,9 @@ class EPCHandler(SocketServer.StreamRequestHandler):
             if self.server.log_traceback or self.server.debugger:
                 self.logger.exception('Unexpected error for UID=%s', uid)
             else:
-                self.logger.error('Unexpected error for UID=%s: %s', repr(err))
+                self.logger.error(
+                    'Unexpected error for UID=%s: %s', uid, repr(err),
+                )
             if self.server.debugger:
                 exc_info = sys.exc_info()
                 self.server.debugger.post_mortem(exc_info[2])
