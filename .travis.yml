@@ -1,16 +1,20 @@
+sudo: false
 language: python
+python:
+  - '3.6'
+  - '3.5'
+  - '3.4'
+  - '2.7'
 env:
-  matrix:
-    - EVM_EMACS=emacs-24.4-travis
-    - EVM_EMACS=emacs-git-snapshot-travis
-  global:
+  - EVM_EMACS=emacs-git-snapshot-travis
 matrix:
-  # allow_failures:
-  #   - env: EMACS=emacs
-  #   - env: EMACS=emacs-snapshot EMACS_PPA=ppa:cassou/emacs
-  #   - env: EMACS=emacs-snapshot EMACS_PPA=ppa:ubuntu-elisp/ppa
+  include:
+    - python: '3.6'
+      env: EVM_EMACS=emacs-24.4-travis
+    - python: '2.7'
+      env: EVM_EMACS=emacs-24.4-travis
 before_install:
-  - pip install tox tox-run-command
+  - pip install tox-travis tox-run-command
 
   # Install Emacs
   - git clone https://github.com/rejeep/evm.git /home/travis/.evm
