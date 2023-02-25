@@ -1,18 +1,17 @@
 sudo: false
 language: python
 python:
-  - '3.6'
-  - '3.5'
-  - '3.4'
-  - '2.7'
+  - '3.10'
+  - '3.8'
+  - '3.7'
 env:
   - EVM_EMACS=emacs-git-snapshot-travis
 matrix:
   include:
-    - python: '3.6'
-      env: EVM_EMACS=emacs-24.4-travis
-    - python: '2.7'
-      env: EVM_EMACS=emacs-24.4-travis
+    - python: '3.8'
+      env: EVM_EMACS=emacs-27.1-travis
+    - python: '3.7'
+      env: EVM_EMACS=emacs-27.1-travis
 before_install:
   - pip install tox-travis tox-run-command
 

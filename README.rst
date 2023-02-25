@@ -32,7 +32,8 @@ easily call Emacs Lisp functions from Python and Python functions from
 Emacs.  For example, you can use Python GUI module to build widgets
 for Emacs (see `examples/gtk/server.py`_ for example).
 
-Python-EPC is tested against Python 2.6, 2.7, 3.2 and 3.3.
+Python-EPC is tested against Python 3.7, 3.8 and 3.10.
+Previous versions worked with Python 2.6, 2.7, 3.2 and 3.3.
 
 Install
 -------
