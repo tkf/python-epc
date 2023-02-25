@@ -128,7 +128,7 @@ class TestEPCServerRequestHandling(BaseEPCServerTestCase):
         reply = self.receive_message()
         self.assertEqual(reply[0], Symbol('return'))
         self.assertEqual(reply[1], 4)
-        method = dict((m[0].value(), m[1:]) for m in reply[2])
+        method = dict((str(m[0]), m[1:]) for m in reply[2])
         self.assertEqual(set(method), set(['echo', 'bad_method']))
 
         actual_docs = dict(
@@ -148,7 +148,7 @@ class TestEPCServerRequestHandling(BaseEPCServerTestCase):
         with logging_to_stdout(self.server.logger):
             self.client_send('(((invalid sexp!')
             reply = self.receive_message()
-        self.assertEqual(reply[0].value(), Symbol('epc-error').value())
+        self.assertEqual(str(reply[0]), str(Symbol('epc-error')))
         self.assertEqual(reply[1], [])  # uid
         assert 'Not enough closing brackets.' in reply[2]
 
@@ -252,7 +252,7 @@ class TestEPCServerCallClient(BaseEPCServerTestCase):
     def test_call_client_methods_info(self):
         self.handler.methods(self.callback)
         (methods, uid) = self.receive_message()
-        self.assertEqual(methods.value(), 'methods')
+        self.assertEqual(str(methods), 'methods')
         self.client_send('(return {0} ((dummy () "")))'.format(uid))
         reply = self.callback_called_with.get(True, 1)
         self.assertEqual(reply, [[Symbol('dummy'), [], ""]])

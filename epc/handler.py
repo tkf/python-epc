@@ -84,7 +84,7 @@ def encode_message(name, *args, **kwds):
 
 def unpack_message(bytes):
     data = loads(bytes.decode('utf-8'))
-    return (data[0].value(), data[1], data[2:])
+    return (str(data[0]), data[1], data[2:])
 
 
 def itermessage(read):
@@ -265,7 +265,7 @@ class EPCHandler(SocketServer.StreamRequestHandler):
     @autolog('debug')
     def _handle_call(self, uid, meth, args):
         # See: `epc:handler-called-method`
-        name = meth.value()
+        name = str(meth)
         try:
             func = self.server.get_method(name)
         except AttributeError:

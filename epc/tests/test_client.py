@@ -105,7 +105,7 @@ class TestClient(BaseTestCase):
         raw = self.fsock.sent_message.get(timeout=self.timeout)
         (name, uid, rest) = unpack_message(raw[6:])
         if name == 'call':
-            rest[0] = rest[0].value()
+            rest[0] = str(rest[0])
         return [name, uid] + rest
 
     def check_sent_message(self, name, uid, args):
